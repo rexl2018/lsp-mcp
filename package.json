@@ -1,0 +1,104 @@
+{
+  "name": "lsp-mcp",
+  "displayName": "LSP MCP",
+  "description": "VS Code extension that provides an LSP MCP server for AI assistants to interact with your development environment",
+  "version": "0.1.0",
+  "publisher": "rexl2018",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rexl2018/lsp-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rexl2018/lsp-mcp/issues"
+  },
+  "homepage": "https://github.com/rexl2018/lsp-mcp#readme",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "vscode",
+    "language-server",
+    "debugging",
+    "ai-assistant",
+    "claude",
+    "claude-desktop",
+    "claude-code",
+    "anthropic"
+  ],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscode-mcp.startServer",
+        "title": "Start MCP Server"
+      },
+      {
+        "command": "vscode-mcp.stopServer",
+        "title": "Stop MCP Server"
+      },
+      {
+        "command": "vscode-mcp.toggleServer",
+        "title": "Toggle MCP Server"
+      }
+    ],
+    "configuration": {
+      "title": "LSP MCP Server",
+      "properties": {
+
+        "vscode-mcp.ssePort": {
+          "type": "number",
+          "default": 8008,
+          "description": "Port for the SSE direct connection server"
+        },
+
+        "vscode-mcp.autoStart": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically start MCP server when extension activates"
+        }
+      }
+    }
+  },
+
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "clean": "rm -rf out",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "prepare": "npm run compile",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^8.35.0",
+    "@typescript-eslint/parser": "^8.35.0",
+    "@vscode/test-electron": "^2.4.1",
+    "eslint": "^8.57.1",
+    "glob": "^11.0.3",
+    "mocha": "^11.7.1",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.13.2",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "cors": "^2.8.5",
+    "eventsource": "^2.0.2",
+    "express": "^5.1.0"
+  }
+}
