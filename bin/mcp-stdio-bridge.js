@@ -181,152 +181,39 @@ async function handleMcpMessage(host, port, message) {
         
       case 'tools/list':
         console.error('[Bridge] Processing tools/list request');
-        return {
-          jsonrpc: '2.0',
-          id: message.id,
-          result: {
-            tools: [
-              {
-                name: 'hover',
-                description: 'Get hover information (type info, documentation) for a symbol by name. MUCH FASTER than reading entire files when you just need to understand a function signature or type',
-                inputSchema: {
-                  type: 'object',
-                  properties: {
-                    symbol: {
-                      type: 'string',
-                      description: 'Name of the symbol to get hover info for (e.g., "calculateSum", "Calculator.multiply")'
-                    },
-                    uri: {
-                      type: 'string',
-                      description: 'File URI to search in (optional - searches entire workspace if not provided)'
-                    },
-                    format: {
-                      type: 'string',
-                      enum: ['compact', 'detailed'],
-                      description: 'Output format: "compact" for AI/token efficiency (default), "detailed" for full data',
-                      default: 'compact'
-                    }
-                  },
-                  required: ['symbol']
-                }
-              },
-              {
-                name: 'definition',
-                description: 'Find the definition of a symbol by name. More efficient than searching files - instantly jumps to where a function/class/variable is defined',
-                inputSchema: {
-                  type: 'object',
-                  properties: {
-                    symbol: {
-                      type: 'string',
-                      description: 'Symbol name to find definition for (e.g., "functionName", "ClassName", "ClassName.methodName")'
-                    },
-                    format: {
-                      type: 'string',
-                      enum: ['compact', 'detailed'],
-                      description: 'Output format: "compact" for AI/token efficiency (default), "detailed" for full data',
-                      default: 'compact'
-                    }
-                  },
-                  required: ['symbol']
-                }
-              },
-              {
-                name: 'diagnostics',
-                description: 'Get diagnostics (errors, warnings, info) for a file or entire workspace. Instantly see all problems without running builds - includes type errors, linting issues, and more',
-                inputSchema: {
-                  type: 'object',
-                  properties: {
-                    uri: {
-                      type: 'string',
-                      description: 'File URI (optional - if not provided, returns all workspace diagnostics)'
-                    },
-                    format: {
-                      type: 'string',
-                      enum: ['compact', 'detailed'],
-                      description: 'Output format: "compact" for AI/token efficiency (default), "detailed" for full data',
-                      default: 'compact'
-                    }
-                  },
-                  required: []
-                }
-              },
-              {
-                name: 'references',
-                description: 'Find all references to a symbol in the workspace',
-                inputSchema: {
-                  type: 'object',
-                  properties: {
-                    symbol: {
-                      type: 'string',
-                      description: 'Symbol name to find references for'
-                    }
-                  },
-                  required: ['symbol']
-                }
-              },
-              {
-                name: 'debug_setBreakpoint',
-                description: 'Set a breakpoint at a specific line in a file',
-                inputSchema: {
-                  type: 'object',
-                  properties: {
-                    uri: {
-                      type: 'string',
-                      description: 'File URI where to set the breakpoint'
-                    },
-                    line: {
-                      type: 'number',
-                      description: 'Line number (1-based) where to set the breakpoint'
-                    }
-                  },
-                  required: ['uri', 'line']
-                }
-              },
-              {
-                name: 'debug_startSession',
-                description: 'Start a debug session with the specified configuration',
-                inputSchema: {
-                  type: 'object',
-                  properties: {
-                    configuration: {
-                      type: 'string',
-                      description: 'Name of the debug configuration to use'
-                    }
-                  },
-                  required: []
-                }
-              },
-              {
-                name: 'symbolSearch',
-                description: 'Search for symbols in the workspace by name or pattern',
-                inputSchema: {
-                  type: 'object',
-                  properties: {
-                    query: {
-                      type: 'string',
-                      description: 'Search query for symbol names'
-                    }
-                  },
-                  required: ['query']
-                }
-              },
-              {
-                name: 'workspaceSymbols',
-                description: 'Get all symbols in the workspace',
-                inputSchema: {
-                  type: 'object',
-                  properties: {
-                    filter: {
-                      type: 'string',
-                      description: 'Optional filter for symbol types'
-                    }
-                  },
-                  required: []
-                }
+        try {
+          // 动态从 VS Code 扩展获取工具列表
+          const toolsResponse = await sendHttpRequest(host, port, '/message', 'POST', {
+            jsonrpc: '2.0',
+            id: 'tools-list-' + Date.now(),
+            method: 'tools/list',
+            params: {}
+          });
+          
+          if (toolsResponse && toolsResponse.result && toolsResponse.result.tools) {
+            console.error('[Bridge] Successfully fetched tools from VS Code extension');
+            return {
+              jsonrpc: '2.0',
+              id: message.id,
+              result: {
+                tools: toolsResponse.result.tools
               }
-            ]
+            };
+          } else {
+            console.error('[Bridge] Failed to fetch tools from VS Code extension, using fallback');
+            throw new Error('Invalid response from VS Code extension');
           }
-        };
+        } catch (error) {
+          console.error('[Bridge] Error fetching tools from VS Code extension:', error);
+          console.error('[Bridge] Using fallback empty tools list');
+          return {
+            jsonrpc: '2.0',
+            id: message.id,
+            result: {
+              tools: []
+            }
+          };
+        }
         
       case 'tools/call':
         console.error('[Bridge] Processing tools/call request');

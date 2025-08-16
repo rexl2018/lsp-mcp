@@ -127,9 +127,9 @@ If Claude can't connect to VS Code:
 
 ### Available Tools
 
-The extension provides 25 tools organized into three main categories:
+The extension provides 26 tools organized into three main categories:
 
-#### Language Intelligence Tools (7 tools)
+#### Language Intelligence Tools (8 tools)
 
 | Tool | Description | Main Parameters | Example |
 |------|-------------|-----------------|---------|
@@ -137,6 +137,7 @@ The extension provides 25 tools organized into three main categories:
 | **definition** | Find where a symbol is defined. Instantly jumps to declarations | `symbol` (required), `format` (optional) | `definition({ symbol: "Calculator" })` |
 | **references** | Find all references to a symbol. Superior to grep - finds semantic references | `symbol` (required), `includeDeclaration` (optional), `format` (optional) | `references({ symbol: "process" })` |
 | **callHierarchy** | Analyze what calls a function or what a function calls | `symbol` (required), `direction` (required: 'incoming'\|'outgoing'\|'both'), `uri` (optional), `format` (optional) | `callHierarchy({ symbol: "initialize", direction: "incoming" })` |
+| **hierarchyTree** | Build multi-level call hierarchy tree with Mermaid visualization. Supports recursive analysis with circular reference detection | `symbol` (required), `direction` (required: 'incoming'\|'outgoing'\|'both'), `depth` (optional, 1-20, default: 5), `uri` (optional), `includeDetails` (optional), `maxNodes` (optional, default: 50), `format` (optional) | `hierarchyTree({ symbol: "processData", direction: "incoming", depth: 5 })` |
 | **symbolSearch** | Search for symbols (classes, functions, variables) across the workspace | `query` (required), `kind` (optional), `format` (optional) | `symbolSearch({ query: "Controller", kind: "class" })` |
 | **workspaceSymbols** | Get a complete map of all symbols in the workspace | `includeDetails` (optional), `filePattern` (optional), `maxFiles` (optional), `format` (optional) | `workspaceSymbols({ filePattern: "**/*.ts" })` |
 | **diagnostics** | Get all errors and warnings for a file or workspace | `uri` (optional), `format` (optional) | `diagnostics({})` |
@@ -214,6 +215,10 @@ AI uses: definition({ symbol: "DatabaseConnection" })
 User: "Show me all places where processPayment is called"
 AI uses: callHierarchy({ symbol: "processPayment", direction: "incoming" })
 → Gets complete list of callers with their locations
+
+User: "Generate a visual call tree for the entire authentication flow"
+AI uses: hierarchyTree({ symbol: "authenticate", direction: "outgoing", depth: 5, includeDetails: true })
+→ Creates a multi-level call hierarchy with Mermaid diagram showing the complete authentication flow
 ```
 
 #### Refactoring
