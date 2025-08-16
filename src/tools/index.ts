@@ -27,6 +27,7 @@ import {
 } from './debug';
 import { refactor_renameTool } from './refactor';
 import { callHierarchyTool } from './callHierarchy';
+import { hierarchyTreeTool } from './hierarchyTree';
 import { symbolSearchTool } from './symbolSearch';
 import { workspaceSymbolsTool } from './workspaceSymbols';
 
@@ -60,6 +61,7 @@ export function getTools(): Tool[] {
     refactor_renameTool,
     // Other tools
     callHierarchyTool,
+    hierarchyTreeTool,
     symbolSearchTool,
     workspaceSymbolsTool,
   ];

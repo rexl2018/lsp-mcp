@@ -178,6 +178,12 @@ export class SSEServer {
       // 直接处理 MCP 请求
       const mcpResponse = await this.handleMcpRequest(message);
       
+      // 对于 tools/list 请求，直接返回响应而不是通过 SSE 广播
+      if (message.method === 'tools/list') {
+        res.json(mcpResponse);
+        return;
+      }
+      
       // 通过 SSE 广播响应给所有连接的客户端
       this.broadcastToClients('message', mcpResponse);
       
