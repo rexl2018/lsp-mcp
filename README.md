@@ -274,6 +274,9 @@ To test your local development version:
 2. **MCP Connection**: The development extension will run on the same SSE endpoint (localhost:8008/mcp)
 3. **Claude Configuration**: No changes needed to Claude config - it will automatically connect to the development instance
 
+## Reference
+Most of the code is based on the [mcp-server-vscode](https://github.com/malvex/mcp-server-vscode) project.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
