@@ -12,6 +12,9 @@
 
 const http = require('http');
 const EventSource = require('eventsource');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 
 // 默认配置
 const DEFAULT_HOST = 'localhost';
@@ -22,6 +25,8 @@ function parseArgs() {
   const args = process.argv.slice(2);
   let host = DEFAULT_HOST;
   let port = DEFAULT_PORT;
+  let workspacePath = null;
+  let autoDiscover = false;
   
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--port' && i + 1 < args.length) {
@@ -30,15 +35,24 @@ function parseArgs() {
     } else if (args[i] === '--host' && i + 1 < args.length) {
       host = args[i + 1];
       i++;
+    } else if (args[i] === '--workspace' && i + 1 < args.length) {
+      workspacePath = args[i + 1];
+      i++;
+    } else if (args[i] === '--auto-discover') {
+      autoDiscover = true;
     } else if (args[i] === '--help' || args[i] === '-h') {
-      console.error('Usage: node mcp-stdio-bridge.js [--port PORT] [--host HOST]');
-      console.error('  --port PORT    MCP server port (default: 8008)');
-      console.error('  --host HOST    MCP server host (default: localhost)');
+      console.error('Usage: node mcp-stdio-bridge.js [OPTIONS]');
+      console.error('Options:');
+      console.error('  --port PORT         MCP server port (default: 8008)');
+      console.error('  --host HOST         MCP server host (default: localhost)');
+      console.error('  --workspace PATH    Workspace path for server discovery');
+      console.error('  --auto-discover     Automatically discover available MCP servers');
+      console.error('  --help, -h          Show this help message');
       process.exit(0);
     }
   }
   
-  return { host, port };
+  return { host, port, workspacePath, autoDiscover };
 }
 
 // 全局变量存储SSE连接和待处理的请求
@@ -313,18 +327,160 @@ async function handleMcpMessage(host, port, message) {
 }
 
 // 主函数
+// 客户端发现机制
+async function discoverMcpServer(workspacePath, preferredPort) {
+  console.error('[Bridge] Starting MCP server discovery...');
+  
+  // 方法1: 从工作区发现文件中查找
+  if (workspacePath) {
+    console.error(`[Bridge] Looking for server in workspace: ${workspacePath}`);
+    const discoveryPath = path.join(workspacePath, '.vscode', 'mcp-server.json');
+    
+    try {
+      const data = await fs.promises.readFile(discoveryPath, 'utf8');
+      const discoveryInfo = JSON.parse(data);
+      
+      if (discoveryInfo && discoveryInfo.ssePort) {
+        console.error(`[Bridge] Found server in workspace discovery file: port ${discoveryInfo.ssePort}`);
+        return {
+          host: 'localhost',
+          port: discoveryInfo.ssePort,
+          workspaceInfo: {
+            id: discoveryInfo.workspaceId,
+            name: discoveryInfo.workspaceName,
+            path: discoveryInfo.workspacePath
+          }
+        };
+      }
+    } catch (error) {
+      console.error('[Bridge] No workspace discovery file found');
+    }
+  }
+  
+  // 方法2: 从全局端口注册表中查找
+  console.error('[Bridge] Checking global port registry...');
+  const registryPath = path.join(os.tmpdir(), '.lsp-mcp-ports.json');
+  
+  try {
+    const data = await fs.promises.readFile(registryPath, 'utf8');
+    const registry = JSON.parse(data);
+    
+    if (Array.isArray(registry)) {
+      // 优先选择匹配工作区的服务器
+      if (workspacePath) {
+        const workspaceMatch = registry.find(entry => 
+          entry.isActive && entry.workspacePath === workspacePath && isProcessAlive(entry.processId)
+        );
+        if (workspaceMatch) {
+          console.error(`[Bridge] Found matching workspace server: port ${workspaceMatch.ssePort}`);
+          return {
+            host: 'localhost',
+            port: workspaceMatch.ssePort,
+            workspaceInfo: {
+              id: workspaceMatch.workspaceId,
+              name: workspaceMatch.workspaceName,
+              path: workspaceMatch.workspacePath
+            }
+          };
+        }
+      }
+      
+      // 选择任何可用的服务器
+      const activeServers = registry.filter(entry => 
+        entry.isActive && isProcessAlive(entry.processId)
+      );
+      
+      if (activeServers.length > 0) {
+        // 选择最新的服务器
+        const latestServer = activeServers.sort((a, b) => b.timestamp - a.timestamp)[0];
+        console.error(`[Bridge] Found active server: port ${latestServer.ssePort}`);
+        return {
+          host: 'localhost',
+          port: latestServer.ssePort,
+          workspaceInfo: {
+            id: latestServer.workspaceId,
+            name: latestServer.workspaceName,
+            path: latestServer.workspacePath
+          }
+        };
+      }
+    }
+  } catch (error) {
+    console.error('[Bridge] No global registry found');
+  }
+  
+  // 方法3: 端口扫描（后备方案）
+  console.error('[Bridge] Scanning for available servers...');
+  const portsToScan = preferredPort ? [preferredPort] : [8008, 8009, 8010, 8011, 8012];
+  
+  for (const port of portsToScan) {
+    try {
+      const isHealthy = await checkServerHealth('localhost', port);
+      if (isHealthy) {
+        console.error(`[Bridge] Found server by scanning: port ${port}`);
+        return {
+          host: 'localhost',
+          port: port,
+          workspaceInfo: {
+            id: `scan-${port}`,
+            name: `Port ${port}`,
+            path: process.cwd()
+          }
+        };
+      }
+    } catch (error) {
+      // 继续扫描下一个端口
+    }
+  }
+  
+  console.error('[Bridge] No MCP servers found');
+  return null;
+}
+
+// 检查进程是否还在运行
+function isProcessAlive(pid) {
+  if (pid === 0) {
+    return true; // 未知进程ID，假设存活
+  }
+  
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 async function main() {
-  const { host, port } = parseArgs();
+  const { host, port, workspacePath, autoDiscover } = parseArgs();
+  
+  let serverInfo = { host, port, workspaceInfo: null };
+  
+  // 如果启用自动发现或提供了工作区路径，尝试发现服务器
+  if (autoDiscover || workspacePath) {
+    const discovered = await discoverMcpServer(workspacePath, port);
+    if (discovered) {
+      serverInfo = discovered;
+      console.error(`[Bridge] Using discovered server: ${serverInfo.host}:${serverInfo.port}`);
+      if (serverInfo.workspaceInfo) {
+        console.error(`[Bridge] Workspace: ${serverInfo.workspaceInfo.name} (${serverInfo.workspaceInfo.path})`);
+      }
+    } else if (autoDiscover) {
+      console.error('[Bridge] ❌ No MCP servers found during auto-discovery');
+      console.error('[Bridge] Please start a VS Code instance with the LSP MCP extension');
+      process.exit(1);
+    }
+  }
   
   console.error(`[Bridge] Starting MCP stdio bridge...`);
-  console.error(`[Bridge] Connecting to MCP server at ${host}:${port}`);
+  console.error(`[Bridge] Connecting to MCP server at ${serverInfo.host}:${serverInfo.port}`);
   
   try {
     // 检查服务器健康状态
     console.error('[Bridge] Checking server health...');
-    const isServerRunning = await checkServerHealth(host, port);
+    const isServerRunning = await checkServerHealth(serverInfo.host, serverInfo.port);
     if (!isServerRunning) {
-      console.error(`[Bridge] ❌ MCP server is not running on ${host}:${port}`);
+      console.error(`[Bridge] ❌ MCP server is not running on ${serverInfo.host}:${serverInfo.port}`);
       console.error('[Bridge] Please start the VS Code extension and ensure the MCP server is running.');
       process.exit(1);
     }
@@ -332,7 +488,7 @@ async function main() {
     
     // 建立SSE连接
     console.error('[Bridge] Establishing SSE connection...');
-    await establishSSEConnection(host, port);
+    await establishSSEConnection(serverInfo.host, serverInfo.port);
     console.error('[Bridge] ✅ SSE connection established');
     
     // 设置stdin/stdout处理
@@ -357,7 +513,7 @@ async function main() {
             
             // 处理MCP消息
             if (message.jsonrpc === '2.0') {
-              const response = await handleMcpMessage(host, port, message);
+              const response = await handleMcpMessage(serverInfo.host, serverInfo.port, message);
               console.error('[Bridge] Sending response:', JSON.stringify(response, null, 2));
               
               // 输出响应到stdout
@@ -413,7 +569,10 @@ async function main() {
     
   } catch (error) {
     console.error('[Bridge] ❌ Failed to start bridge:', error.message);
-    console.error('[Bridge] Make sure the MCP server is running on the specified host and port');
+    console.error(`[Bridge] Make sure the MCP server is running on ${serverInfo.host}:${serverInfo.port}`);
+    if (serverInfo.workspaceInfo) {
+      console.error(`[Bridge] Expected workspace: ${serverInfo.workspaceInfo.name}`);
+    }
     process.exit(1);
   }
 }

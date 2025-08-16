@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { SSEServer, SSEServerConfig } from './mcp/sse-server';
 import { debugOutputTracker } from './services/debugOutputTracker';
+import { workspacePortManager } from './utils/workspace-port-manager';
 
 let sseServer: SSEServer | undefined;
 let mcpServerStatusBar: vscode.StatusBarItem | undefined;
@@ -10,16 +11,22 @@ async function updateMcpServerStatusBar() {
     return;
   }
 
-  const config = vscode.workspace.getConfiguration('vscode-mcp');
-  const ssePort = config.get<number>('ssePort', 8008);
+  const workspaceInfo = workspacePortManager.getWorkspaceInfo();
+  const ssePort = workspaceInfo.port;
 
-  // Check if server is actually running by testing the port
-  const isServerRunning = await checkServerRunning(ssePort);
-  
-  if (isServerRunning) {
-    mcpServerStatusBar.text = `$(server) MCP SSE: ${ssePort}`;
-    mcpServerStatusBar.tooltip = `MCP SSE Server is running on port ${ssePort}\nClick to stop`;
-    mcpServerStatusBar.backgroundColor = undefined;
+  if (ssePort && sseServer) {
+    // Check if server is actually running by testing the port
+    const isServerRunning = await checkServerRunning(ssePort);
+    
+    if (isServerRunning) {
+      mcpServerStatusBar.text = `$(server) MCP SSE: ${ssePort}`;
+      mcpServerStatusBar.tooltip = `MCP SSE Server is running on port ${ssePort}\nWorkspace: ${workspaceInfo.name}\nClick to stop`;
+      mcpServerStatusBar.backgroundColor = undefined;
+    } else {
+      mcpServerStatusBar.text = '$(server) MCP: Error';
+      mcpServerStatusBar.tooltip = 'MCP SSE Server encountered an error\nClick to restart';
+      mcpServerStatusBar.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+    }
   } else {
     mcpServerStatusBar.text = '$(server) MCP: Stopped';
     mcpServerStatusBar.tooltip = 'MCP SSE Server is stopped\nClick to start';
@@ -45,25 +52,30 @@ export async function activate(context: vscode.ExtensionContext) {
   // Initialize debug output tracker
   debugOutputTracker.initialize();
 
-  const startServerCommand = vscode.commands.registerCommand('vscode-mcp.startServer', async () => {
+  const startServerCommand = vscode.commands.registerCommand('lsp-mcp.startServer', async () => {
     if (sseServer) {
       return;
     }
 
-    const config = vscode.workspace.getConfiguration('vscode-mcp');
-    const ssePort = config.get<number>('ssePort', 8008);
-
     try {
+      // 为当前工作区分配唯一端口
+      const ssePort = await workspacePortManager.assignPort();
+      const workspaceInfo = workspacePortManager.getWorkspaceInfo();
+      
       const sseConfig: SSEServerConfig = {
         port: ssePort,
         host: 'localhost',
         corsOrigins: ['*']
       };
+      
       sseServer = new SSEServer(sseConfig);
       await sseServer.start();
       
+      // 创建客户端发现文件
+      await workspacePortManager.createDiscoveryFile();
+      
       vscode.window.showInformationMessage(
-        `MCP SSE Server started on port ${ssePort}.`
+        `MCP SSE Server started on port ${ssePort} for workspace "${workspaceInfo.name}".`
       );
       
       await updateMcpServerStatusBar();
@@ -72,7 +84,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   });
 
-  const stopServerCommand = vscode.commands.registerCommand('vscode-mcp.stopServer', async () => {
+  const stopServerCommand = vscode.commands.registerCommand('lsp-mcp.stopServer', async () => {
     if (!sseServer) {
       return;
     }
@@ -80,6 +92,10 @@ export async function activate(context: vscode.ExtensionContext) {
     try {
       await sseServer.stop();
       sseServer = undefined;
+      
+      // 释放端口并清理发现文件
+      await workspacePortManager.releasePort();
+      await workspacePortManager.removeDiscoveryFile();
       
       await updateMcpServerStatusBar();
       vscode.window.showInformationMessage('MCP SSE Server stopped.');
@@ -89,12 +105,12 @@ export async function activate(context: vscode.ExtensionContext) {
   });
 
   const toggleServerCommand = vscode.commands.registerCommand(
-    'vscode-mcp.toggleServer',
+    'lsp-mcp.toggleServer',
     async () => {
       if (sseServer) {
-        await vscode.commands.executeCommand('vscode-mcp.stopServer');
+        await vscode.commands.executeCommand('lsp-mcp.stopServer');
       } else {
-        await vscode.commands.executeCommand('vscode-mcp.startServer');
+        await vscode.commands.executeCommand('lsp-mcp.startServer');
       }
     }
   );
@@ -103,7 +119,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Create MCP server status bar item
   mcpServerStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 101);
-  mcpServerStatusBar.command = 'vscode-mcp.toggleServer';
+  mcpServerStatusBar.command = 'lsp-mcp.toggleServer';
   await updateMcpServerStatusBar();
   mcpServerStatusBar.show();
 
@@ -115,14 +131,27 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   // Auto-start server on activation
-  // vscode.commands.executeCommand('vscode-mcp.startServer');
+  // vscode.commands.executeCommand('lsp-mcp.startServer');
 }
 
-export function deactivate() {
-  // Dispose debug output tracker
-  debugOutputTracker.dispose();
-
+export async function deactivate() {
+  console.log('LSP MCP Server extension deactivated');
+  
+  // 停止服务器并清理资源
   if (sseServer) {
-    sseServer.stop();
+    try {
+      await sseServer.stop();
+    } catch (error) {
+      console.error('Error stopping SSE server during deactivation:', error);
+    }
   }
+  
+  // 清理工作区端口管理器
+  try {
+    await workspacePortManager.dispose();
+  } catch (error) {
+    console.error('Error disposing workspace port manager:', error);
+  }
+  
+  debugOutputTracker.dispose();
 }

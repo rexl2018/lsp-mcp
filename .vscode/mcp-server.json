@@ -1,0 +1,13 @@
+{
+  "workspaceId": "a43beab6",
+  "workspaceName": "lsp-mcp",
+  "workspacePath": "/Users/bytedance/work/tools/git/lsp-mcp",
+  "ssePort": 8008,
+  "processId": 84877,
+  "timestamp": 1755355118596,
+  "endpoints": {
+    "sse": "http://localhost:8008/mcp",
+    "health": "http://localhost:8008/health",
+    "info": "http://localhost:8008/info"
+  }
+}

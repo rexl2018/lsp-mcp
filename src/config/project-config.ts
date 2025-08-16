@@ -94,7 +94,7 @@ export class ProjectConfigManager {
    * 获取默认配置
    */
   public getDefaultConfig(): ProjectConfig {
-    const vsCodeConfig = vscode.workspace.getConfiguration('vscode-mcp');
+    const vsCodeConfig = vscode.workspace.getConfiguration('lsp-mcp');
     
     return {
       name: 'default',
@@ -116,7 +116,7 @@ export class ProjectConfigManager {
    * 获取全局配置
    */
   private getGlobalConfig(): Partial<ProjectConfig> {
-    const vsCodeConfig = vscode.workspace.getConfiguration('vscode-mcp');
+    const vsCodeConfig = vscode.workspace.getConfiguration('lsp-mcp');
     
     return {
       ssePort: vsCodeConfig.get<number>('ssePort'),

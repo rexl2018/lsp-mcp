@@ -34,9 +34,9 @@ Download the `.vsix` file from [Releases](https://github.com/rexl2018/lsp-mcp/re
 
 The MCP server connects directly to VS Code via SSE. We provide a simple stdio bridge for easy configuration.
 
-### Option 1: Simple Configuration (Recommended)
+### Option 1: Auto-Discovery (Recommended)
 
-Add this to your Claude config:
+For automatic server discovery across multiple VS Code instances:
 
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
@@ -46,7 +46,7 @@ Add this to your Claude config:
   "mcpServers": {
     "vscode": {
       "command": "node",
-      "args": ["/path/to/lsp-mcp/bin/mcp-stdio-bridge.js"]
+      "args": ["/path/to/lsp-mcp/bin/mcp-stdio-bridge.js", "--auto-discover"]
     }
   }
 }
@@ -54,9 +54,24 @@ Add this to your Claude config:
 
 **Note**: Replace `/path/to/lsp-mcp` with the actual path to this extension directory.
 
-### Option 2: Advanced Configuration
+### Option 2: Workspace-Specific Configuration
 
-If you need custom host/port settings:
+To connect to a specific workspace:
+
+```json
+{
+  "mcpServers": {
+    "vscode": {
+      "command": "node",
+      "args": ["/path/to/lsp-mcp/bin/mcp-stdio-bridge.js", "--workspace", "/path/to/your/workspace"]
+    }
+  }
+}
+```
+
+### Option 3: Manual Port Configuration
+
+If you need to specify a custom port:
 
 ```json
 {
@@ -75,13 +90,19 @@ That's it! The VS Code tools are now available in Claude.
 
 ### Configure Claude Code (CLI)
 
-For Claude Code users, use the simplified stdio bridge:
+For Claude Code users, use auto-discovery (recommended):
 
 ```bash
-claude mcp add-json vscode '{"type":"stdio","command":"node","args":["/path/to/lsp-mcp/bin/mcp-stdio-bridge.js"]}' -s user
+claude mcp add-json vscode '{"type":"stdio","command":"node","args":["/path/to/lsp-mcp/bin/mcp-stdio-bridge.js","--auto-discover"]}' -s user
 ```
 
 **Note**: Replace `/path/to/lsp-mcp` with the actual path to this extension directory.
+
+For workspace-specific connection:
+
+```bash
+claude mcp add-json vscode '{"type":"stdio","command":"node","args":["/path/to/lsp-mcp/bin/mcp-stdio-bridge.js","--workspace","/path/to/your/workspace"]}' -s user
+```
 
 For custom host/port settings:
 
@@ -89,14 +110,38 @@ For custom host/port settings:
 claude mcp add-json vscode '{"type":"stdio","command":"node","args":["/path/to/lsp-mcp/bin/mcp-stdio-bridge.js","--port","8008","--host","localhost"]}' -s user
 ```
 
+## Multi-Instance Support
+
+This extension supports running multiple VS Code instances simultaneously, with each instance automatically getting its own unique port. This ensures that clients can connect to the correct server without conflicts.
+
+### How It Works
+
+1. **Automatic Port Assignment**: Each VS Code instance automatically gets assigned a unique port (starting from 8008)
+2. **Workspace Discovery**: The extension creates discovery files that help clients find the right server
+3. **Client Auto-Discovery**: The stdio bridge can automatically discover and connect to the appropriate server
+
+### Discovery Mechanisms
+
+The stdio bridge uses multiple methods to find the correct MCP server:
+
+1. **Workspace Discovery File**: Each workspace creates a `.vscode/mcp-server.json` file with server information
+2. **Global Port Registry**: A system-wide registry tracks all active MCP servers
+3. **Port Scanning**: As a fallback, the bridge scans common ports to find available servers
+
+### Best Practices
+
+- Use `--auto-discover` for automatic server detection
+- Use `--workspace /path/to/workspace` to connect to a specific workspace
+- The extension handles port conflicts automatically - no manual configuration needed
+
 ## Usage
 
 Once installed, the extension shows the MCP server status in the VS Code status bar (bottom right).
 
-**To start the MCP server**: Click on "LSP MCP: Stopped" in the status bar. It will change to "LSP MCP: Running" when active.
+**To start the MCP server**: Click on "LSP MCP: Stopped" in the status bar. It will change to "LSP MCP: Running (Port: XXXX)" when active.
 
 The status bar indicates:
-- **LSP MCP: Running** - Server is running and ready for connections
+- **LSP MCP: Running (Port: XXXX)** - Server is running on the specified port and ready for connections
 - **LSP MCP: Stopped** - Server is not running
 
 Click the status bar item to toggle the server on/off.
