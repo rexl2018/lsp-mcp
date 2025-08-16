@@ -212,14 +212,14 @@ export class ClientDiscovery {
       return null;
     }
     
-    // 优先选择匹配工作区路径的服务器
+    // 只选择匹配工作区路径的服务器
     const exactMatch = servers.find(server => server.workspacePath === workspacePath);
     if (exactMatch) {
       return exactMatch;
     }
     
-    // 选择最新的服务器
-    return servers.sort((a, b) => b.timestamp - a.timestamp)[0];
+    // 如果没有找到匹配的工作区服务器，返回null而不是其他服务器
+    return null;
   }
   
   /**

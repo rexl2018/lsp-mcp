@@ -385,7 +385,13 @@ async function discoverMcpServer(workspacePath, preferredPort) {
         }
       }
       
-      // 选择任何可用的服务器
+      // 如果指定了工作区路径但没有找到匹配的服务器，不使用其他服务器
+      if (workspacePath) {
+        console.error(`[Bridge] No server found for workspace: ${workspacePath}`);
+        return null;
+      }
+      
+      // 只有在没有指定工作区时才选择任何可用的服务器
       const activeServers = registry.filter(entry => 
         entry.isActive && isProcessAlive(entry.processId)
       );
