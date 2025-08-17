@@ -28,8 +28,14 @@ export interface HierarchyTreeOptions {
   direction: 'incoming' | 'outgoing' | 'both';
   /** Maximum recursion depth */
   depth: number;
-  /** Optional file URI to limit search */
-  uri?: string;
+
+  /** Optional symbol location (file path and line number) */
+  symbolLocation?: {
+    /** File path where the symbol is located */
+    filePath: string;
+    /** Line number (1-based) where the symbol is located */
+    line: number;
+  };
   /** Include detailed information in output */
   includeDetails: boolean;
   /** Maximum number of nodes to prevent oversized graphs */

@@ -32,7 +32,7 @@ export class HierarchyTreeBuilder {
 
     try {
       // Find the root symbol
-      const rootItems = await this.findSymbol(options.symbol, options.uri);
+      const rootItems = await this.findSymbol(options.symbol, options.symbolLocation);
       if (rootItems.length === 0) {
         throw new Error(`Symbol '${options.symbol}' not found`);
       }
@@ -148,15 +148,77 @@ export class HierarchyTreeBuilder {
   /**
    * Find symbol in workspace
    */
-  private async findSymbol(symbolName: string, uri?: string): Promise<CallHierarchyItem[]> {
-    // Import searchWorkspaceSymbols for better symbol finding with retry logic
-    const { searchWorkspaceSymbols } = await import('./symbolProvider');
+  private async findSymbol(symbolName: string, symbolLocation?: { filePath: string, line: number }): Promise<CallHierarchyItem[]> {
+    // Import necessary modules
+    const { searchWorkspaceSymbols, getDocumentSymbols } = await import('./symbolProvider');
+    const vscode = await import('vscode');
+    
+    // Log to output channel
+    const outputChannel = vscode.window.createOutputChannel('LSP MCP');
+    outputChannel.appendLine(`[hierarchyTree] Finding symbol: ${symbolName}`);
+    
+    // Try to find symbol by location first if provided
+    if (symbolLocation) {
+      outputChannel.appendLine(`[hierarchyTree] Using symbolLocation: ${symbolLocation.filePath}:${symbolLocation.line}`);
+      
+      try {
+        // Convert file path to URI
+        const fileUri = vscode.Uri.file(symbolLocation.filePath);
+        
+        // Open the document
+        const document = await vscode.workspace.openTextDocument(fileUri);
+        
+        // Get document symbols
+        const docSymbols = await getDocumentSymbols(document);
+        
+        if (docSymbols && docSymbols.length > 0) {
+          // Find symbols at or near the specified line
+          const linePosition = new vscode.Position(symbolLocation.line - 1, 0); // Convert to 0-based
+          
+          // Find symbols that contain this line
+          const symbolsAtLine = this.findSymbolsAtLine(docSymbols, linePosition);
+          
+          if (symbolsAtLine.length > 0) {
+            outputChannel.appendLine(`[hierarchyTree] Found ${symbolsAtLine.length} symbols at line ${symbolLocation.line}`);
+            
+            // Convert to CallHierarchyItems
+            const items: CallHierarchyItem[] = [];
+            
+            for (const symbol of symbolsAtLine) {
+              // Create a SymbolInformation from DocumentSymbol
+              const symbolInfo = new vscode.SymbolInformation(
+                symbol.name,
+                symbol.kind,
+                symbol.detail || '',
+                new vscode.Location(fileUri, symbol.range)
+              );
+              
+              items.push(this.symbolToCallHierarchyItem(symbolInfo));
+            }
+            
+            // If we found symbols by location, return them
+            if (items.length > 0) {
+              return items;
+            }
+          }
+        }
+        
+        outputChannel.appendLine(`[hierarchyTree] No symbols found at location, falling back to name search`);
+      } catch (error) {
+        outputChannel.appendLine(`[hierarchyTree] Error finding symbol by location: ${error}`);
+        // Continue with name-based search as fallback
+      }
+    }
+    
+    // Fallback to name-based search
+    outputChannel.appendLine(`[hierarchyTree] Searching for symbol by name: ${symbolName}`);
     
     // Use the same symbol search logic as callHierarchy tool
     const searchQuery = symbolName.includes('.') ? symbolName.split('.').pop()! : symbolName;
     const workspaceSymbols = await searchWorkspaceSymbols(searchQuery);
 
     if (!workspaceSymbols || workspaceSymbols.length === 0) {
+      outputChannel.appendLine(`[hierarchyTree] No symbols found with name: ${searchQuery}`);
       return [];
     }
 
@@ -168,10 +230,7 @@ export class HierarchyTreeBuilder {
         s.name.startsWith(searchQuery + '(') ||
         (symbolName.includes('.') && s.containerName === symbolName.split('.')[0]);
 
-      // Filter by URI if provided
-      const uriMatches = !uri || s.location.uri.toString() === uri;
-
-      return nameMatches && uriMatches;
+      return nameMatches;
     });
 
     // Prioritize non-method symbols when no container is specified
@@ -188,7 +247,30 @@ export class HierarchyTreeBuilder {
       items.push(this.symbolToCallHierarchyItem(symbol));
     }
 
+    outputChannel.appendLine(`[hierarchyTree] Found ${items.length} symbols by name`);
     return items;
+  }
+  
+  /**
+   * Find symbols at a specific line in document
+   */
+  private findSymbolsAtLine(symbols: vscode.DocumentSymbol[], position: vscode.Position): vscode.DocumentSymbol[] {
+    const result: vscode.DocumentSymbol[] = [];
+    
+    for (const symbol of symbols) {
+      // Check if this symbol contains the position
+      if (symbol.range.contains(position)) {
+        result.push(symbol);
+        
+        // Also check children recursively
+        if (symbol.children && symbol.children.length > 0) {
+          const childMatches = this.findSymbolsAtLine(symbol.children, position);
+          result.push(...childMatches);
+        }
+      }
+    }
+    
+    return result;
   }
 
   /**
