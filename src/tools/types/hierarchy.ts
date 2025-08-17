@@ -13,6 +13,8 @@ export interface HierarchyNode {
   file: string;
   /** Line number */
   line: number;
+  /** Character number */
+  character: number;
   /** Hierarchy level depth */
   level: number;
   /** Child nodes */

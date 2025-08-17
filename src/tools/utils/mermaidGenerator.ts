@@ -83,7 +83,7 @@ export class MermaidGenerator {
    * 第四个数字：列号（默认为0，因为HierarchyNode中没有列信息）
    */
   private getOrCreateNodeId(node: HierarchyNode): string {
-    const nodeKey = `${node.name}:${node.file}:${node.line}`;
+    const nodeKey = `${node.name}:${node.file}:${node.line}:${node.character || 0}`;
     
     if (!this.nodeIdMap.has(nodeKey)) {
       // 提取目录路径
@@ -106,7 +106,7 @@ export class MermaidGenerator {
       const fileId = this.fileIdMap.get(fileKey)!;
       
       // 生成节点ID：目录ID_文件ID_行号_列号
-      const nodeId = `${dirId}_${fileId}_${node.line}_0`;
+      const nodeId = `${dirId}_${fileId}_${node.line}_${node.character || 0}`;
       this.nodeIdMap.set(nodeKey, nodeId);
     }
     
