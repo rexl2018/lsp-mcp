@@ -5,7 +5,7 @@ import { outputChannelService } from '../../services/outputChannelService';
 export interface SymbolLocation {
   filePath: string;
   line: number; // 1-based
-  column?: number; // 0-based, optional for backward compatibility
+  column: number; // 0-based, required parameter
 }
 
 function findSymbolsAtLine(symbols: vscode.DocumentSymbol[], position: vscode.Position): vscode.DocumentSymbol[] {
@@ -47,6 +47,7 @@ async function findSymbolsByLocation(symbolLocation: SymbolLocation): Promise<vs
       // 使用column字段（如果提供），否则默认为0
       const column = symbolLocation.column !== undefined ? symbolLocation.column : 0;
       const linePosition = new vscode.Position(symbolLocation.line - 1, column); // Convert to 0-based
+      outputChannel.appendLine(`[findSymbols] Searching at position: line ${symbolLocation.line - 1}, column ${column}`);
       const symbolsAtLine = findSymbolsAtLine(docSymbols, linePosition);
 
       if (symbolsAtLine.length > 0) {
@@ -111,7 +112,7 @@ export async function findSymbols(symbolName: string, symbolLocation?: SymbolLoc
   outputChannel.appendLine(`[findSymbols] Finding symbol: ${symbolName}`);
 
   if (symbolLocation) {
-    outputChannel.appendLine(`[findSymbols] Using symbolLocation: ${symbolLocation.filePath}:${symbolLocation.line}`);
+    outputChannel.appendLine(`[findSymbols] Using symbolLocation: ${symbolLocation.filePath}:${symbolLocation.line}:${symbolLocation.column !== undefined ? symbolLocation.column : 0}`);
     const symbols = await findSymbolsByLocation(symbolLocation);
     if (symbols.length > 0) {
       return symbols;

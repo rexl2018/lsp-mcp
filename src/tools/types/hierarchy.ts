@@ -38,7 +38,7 @@ export interface HierarchyTreeOptions {
     /** Line number (1-based) where the symbol is located */
     line: number;
     /** Column number (0-based) where the symbol is located */
-    column?: number;
+    column: number;
   };
   /** Include detailed information in output */
   includeDetails: boolean;

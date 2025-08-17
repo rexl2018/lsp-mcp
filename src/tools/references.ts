@@ -31,7 +31,7 @@ export const referencesTool: Tool = {
             description: 'Column number (0-based) where the symbol is located'
           }
         },
-        required: ['filePath', 'line']
+         required: ['filePath', 'line', 'column']
       },
       includeDeclaration: {
         type: 'boolean',

@@ -35,7 +35,7 @@ export const callHierarchyTool: Tool = {
             description: 'Column number (0-based) where the symbol is located'
           }
         },
-        required: ['filePath', 'line']
+         required: ['filePath', 'line', 'column']
       },
       direction: {
         type: 'string',

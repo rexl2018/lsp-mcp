@@ -62,7 +62,7 @@ export const refactor_renameTool: Tool = {
             description: 'Line number (1-based) where the symbol is located'
           }
         },
-        required: ['filePath', 'line']
+         required: ['filePath', 'line', 'column']
       },
       newName: {
         type: 'string',

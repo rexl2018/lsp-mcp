@@ -34,7 +34,8 @@ export class HierarchyTreeBuilder {
     const logger = outputChannelService.getLspMcpChannel();
     logger.appendLine(`\n[HierarchyTree] Building tree for symbol '${options.symbol}', direction: ${options.direction}, depth: ${options.depth}`);
     if (options.symbolLocation) {
-      logger.appendLine(`[HierarchyTree] Using symbol location: ${options.symbolLocation.filePath}:${options.symbolLocation.line}`);
+      const column = options.symbolLocation.column !== undefined ? options.symbolLocation.column : 0;
+      logger.appendLine(`[HierarchyTree] Using symbol location: ${options.symbolLocation.filePath}:${options.symbolLocation.line}:${column}`);
     }
     
     this.reset();
