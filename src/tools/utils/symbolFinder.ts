@@ -5,15 +5,27 @@ import { outputChannelService } from '../../services/outputChannelService';
 export interface SymbolLocation {
   filePath: string;
   line: number; // 1-based
+  column?: number; // 0-based, optional for backward compatibility
 }
 
 function findSymbolsAtLine(symbols: vscode.DocumentSymbol[], position: vscode.Position): vscode.DocumentSymbol[] {
   const result: vscode.DocumentSymbol[] = [];
   for (const symbol of symbols) {
     if (symbol.range.contains(position)) {
-      result.push(symbol);
+      // 检查是否有子符号包含该位置
+      let foundInChildren = false;
       if (symbol.children && symbol.children.length > 0) {
-        result.push(...findSymbolsAtLine(symbol.children, position));
+        const childSymbols = findSymbolsAtLine(symbol.children, position);
+        if (childSymbols.length > 0) {
+          // 如果在子符号中找到，优先返回子符号
+          result.push(...childSymbols);
+          foundInChildren = true;
+        }
+      }
+      
+      // 如果没有在子符号中找到，或者这个符号没有子符号，则添加当前符号
+      if (!foundInChildren) {
+        result.push(symbol);
       }
     }
   }
@@ -24,16 +36,33 @@ async function findSymbolsByLocation(symbolLocation: SymbolLocation): Promise<vs
   const outputChannel = outputChannelService.getLspMcpChannel();
   try {
     const fileUri = vscode.Uri.file(symbolLocation.filePath);
-    const document = await vscode.workspace.openTextDocument(fileUri);
-    const docSymbols = await getDocumentSymbols(document);
+    
+    // 直接使用vscode.executeDocumentSymbolProvider命令获取文档符号，不需要打开文档
+    const docSymbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
+      'vscode.executeDocumentSymbolProvider',
+      fileUri
+    );
 
     if (docSymbols && docSymbols.length > 0) {
-      const linePosition = new vscode.Position(symbolLocation.line - 1, 0); // Convert to 0-based
+      // 使用column字段（如果提供），否则默认为0
+      const column = symbolLocation.column !== undefined ? symbolLocation.column : 0;
+      const linePosition = new vscode.Position(symbolLocation.line - 1, column); // Convert to 0-based
       const symbolsAtLine = findSymbolsAtLine(docSymbols, linePosition);
 
       if (symbolsAtLine.length > 0) {
         outputChannel.appendLine(`[findSymbols] Found ${symbolsAtLine.length} symbols at line ${symbolLocation.line}`);
-        return symbolsAtLine.map(symbol => new vscode.SymbolInformation(
+        
+        // 优先查找方法类型的符号
+        const methodSymbols = symbolsAtLine.filter(s => 
+          s.kind === vscode.SymbolKind.Method || 
+          s.kind === vscode.SymbolKind.Function ||
+          s.kind === vscode.SymbolKind.Constructor
+        );
+        
+        // 如果找到了方法类型的符号，优先返回这些符号
+        const symbolsToReturn = methodSymbols.length > 0 ? methodSymbols : symbolsAtLine;
+        
+        return symbolsToReturn.map(symbol => new vscode.SymbolInformation(
           symbol.name,
           symbol.kind,
           '', // containerName

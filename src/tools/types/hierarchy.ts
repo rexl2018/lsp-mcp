@@ -31,12 +31,14 @@ export interface HierarchyTreeOptions {
   /** Maximum recursion depth */
   depth: number;
 
-  /** Optional symbol location (file path and line number) */
+  /** Optional symbol location (file path, line number and column) */
   symbolLocation?: {
     /** File path where the symbol is located */
     filePath: string;
     /** Line number (1-based) where the symbol is located */
     line: number;
+    /** Column number (0-based) where the symbol is located */
+    column?: number;
   };
   /** Include detailed information in output */
   includeDetails: boolean;
