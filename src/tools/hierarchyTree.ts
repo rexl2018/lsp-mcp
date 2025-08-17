@@ -66,6 +66,14 @@ export const hierarchyTreeTool: Tool = {
         minimum: 5,
         maximum: 200
       },
+      skipPaths: {
+        type: 'array',
+        description: 'Paths to skip (glob patterns similar to .gitignore), not necessary to pass',
+        items: {
+          type: 'string'
+        },
+        default: ["**/go/src/", "**/go/pkg/", "**/gopkg/", "**/node_modules/", "**/Test"]
+      },
       format: {
         type: 'string',
         enum: ['compact', 'detailed'],
@@ -178,12 +186,20 @@ function validateAndNormalizeOptions(args: any): HierarchyTreeOptions {
     };
   }
   
+  // Add skipPaths if provided or use default
+  if (args.skipPaths !== undefined) {
+    if (Array.isArray(args.skipPaths)) {
+      options.skipPaths = args.skipPaths.filter((path: any) => typeof path === 'string');
+    }
+  } else {
+    // 使用默认值
+    options.skipPaths = ["**/go/src/", "**/go/pkg/", "**/gopkg/", "**/node_modules/", "**/Test"];
+  }
+  
   // Validate direction
   if (!['incoming', 'outgoing', 'both'].includes(options.direction)) {
     throw new Error('Direction must be one of: incoming, outgoing, both');
   }
-  
-
   
   return options;
 }

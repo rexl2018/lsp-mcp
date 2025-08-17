@@ -7,6 +7,7 @@ import * as vscode from 'vscode';
 import { findSymbols } from './symbolFinder';
 import { HierarchyNode, HierarchyTreeOptions, BuilderStats, CallHierarchyItem } from '../types/hierarchy';
 import { CircularDetector, createCircularDetector } from './circularDetector';
+import { matchesAnyPattern } from './pathMatcher';
 
 export class HierarchyTreeBuilder {
   private circularDetector: CircularDetector;
@@ -114,6 +115,14 @@ export class HierarchyTreeBuilder {
       return;
     }
 
+    // Check if node should be skipped based on skipPaths
+    if (options.skipPaths && options.skipPaths.length > 0) {
+      if (matchesAnyPattern(node.file, options.skipPaths)) {
+        console.log(`[HierarchyTree] Skipping node ${node.name} at ${node.file} due to skipPaths match`);
+        return;
+      }
+    }
+
     // Mark node as visited
     this.circularDetector.markVisited(node);
     this.stats.nodesProcessed++;
@@ -131,6 +140,14 @@ export class HierarchyTreeBuilder {
         }
 
         const childNode = this.createNodeFromItem(callItem, currentDepth + 1);
+        
+        // Check if this node should be skipped based on skipPaths
+        if (options.skipPaths && options.skipPaths.length > 0) {
+          if (matchesAnyPattern(childNode.file, options.skipPaths)) {
+            console.log(`[HierarchyTree] Skipping child node ${childNode.name} at ${childNode.file} due to skipPaths match`);
+            continue;
+          }
+        }
         
         // Check if this would create a circular reference
         if (!this.circularDetector.isInCurrentPath(childNode)) {

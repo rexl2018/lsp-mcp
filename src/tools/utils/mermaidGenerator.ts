@@ -10,6 +10,10 @@ export class MermaidGenerator {
   private connections = new Set<string>();
   private nodeCounter = 0;
   private nodeIdMap = new Map<string, string>();
+  private dirIdMap = new Map<string, number>();
+  private fileIdMap = new Map<string, number>();
+  private dirCounter = 0;
+  private fileCounter = 0;
 
   /**
    * Generate Mermaid graph from hierarchy nodes
@@ -72,12 +76,37 @@ export class MermaidGenerator {
 
   /**
    * Create a unique node ID
+   * 生成由四个数字组成的节点ID，用_连接
+   * 第一个数字：目录ID（同一目录下的节点该值相同）
+   * 第二个数字：文件ID（同一文件中的节点该值相同）
+   * 第三个数字：行号
+   * 第四个数字：列号（默认为0，因为HierarchyNode中没有列信息）
    */
   private getOrCreateNodeId(node: HierarchyNode): string {
     const nodeKey = `${node.name}:${node.file}:${node.line}`;
     
     if (!this.nodeIdMap.has(nodeKey)) {
-      const nodeId = `node${this.nodeCounter++}`;
+      // 提取目录路径
+      const filePath = node.file;
+      const lastSlashIndex = filePath.lastIndexOf('/');
+      const dirPath = lastSlashIndex > 0 ? filePath.substring(0, lastSlashIndex) : '';
+      const fileName = lastSlashIndex > 0 ? filePath.substring(lastSlashIndex + 1) : filePath;
+      
+      // 为目录分配ID
+      if (!this.dirIdMap.has(dirPath)) {
+        this.dirIdMap.set(dirPath, this.dirCounter++);
+      }
+      const dirId = this.dirIdMap.get(dirPath)!;
+      
+      // 为文件分配ID
+      const fileKey = `${dirPath}/${fileName}`;
+      if (!this.fileIdMap.has(fileKey)) {
+        this.fileIdMap.set(fileKey, this.fileCounter++);
+      }
+      const fileId = this.fileIdMap.get(fileKey)!;
+      
+      // 生成节点ID：目录ID_文件ID_行号_列号
+      const nodeId = `${dirId}_${fileId}_${node.line}_0`;
       this.nodeIdMap.set(nodeKey, nodeId);
     }
     
@@ -215,6 +244,10 @@ export class MermaidGenerator {
     this.connections.clear();
     this.nodeCounter = 0;
     this.nodeIdMap.clear();
+    this.dirIdMap.clear();
+    this.fileIdMap.clear();
+    this.dirCounter = 0;
+    this.fileCounter = 0;
   }
 
   /**

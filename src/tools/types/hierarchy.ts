@@ -40,6 +40,8 @@ export interface HierarchyTreeOptions {
   includeDetails: boolean;
   /** Maximum number of nodes to prevent oversized graphs */
   maxNodes: number;
+  /** Paths to skip (glob patterns similar to .gitignore) */
+  skipPaths?: string[];
 }
 
 export interface HierarchyTreeResult {
