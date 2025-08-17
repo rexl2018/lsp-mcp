@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { SSEServer, SSEServerConfig } from './mcp/sse-server';
 import { debugOutputTracker } from './services/debugOutputTracker';
+import { outputChannelService } from './services/outputChannelService';
 import { workspacePortManager } from './utils/workspace-port-manager';
 
 let sseServer: SSEServer | undefined;
@@ -151,6 +152,13 @@ export async function deactivate() {
     await workspacePortManager.dispose();
   } catch (error) {
     console.error('Error disposing workspace port manager:', error);
+  }
+  
+  // 清理输出通道
+  try {
+    outputChannelService.dispose();
+  } catch (error) {
+    console.error('Error disposing output channel service:', error);
   }
   
   debugOutputTracker.dispose();

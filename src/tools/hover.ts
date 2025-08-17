@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
+import { findSymbols } from './utils/symbolFinder';
 import { Tool } from './types';
-import { searchWorkspaceSymbols } from './utils/symbolProvider';
 
 export const hoverTool: Tool = {
   name: 'hover',
@@ -14,9 +14,20 @@ export const hoverTool: Tool = {
         description:
           'Name of the symbol to get hover info for (e.g., "calculateSum", "Calculator.multiply")',
       },
-      uri: {
-        type: 'string',
-        description: 'File URI to search in (optional - searches entire workspace if not provided)',
+      symbolLocation: {
+        type: 'object',
+        description: 'Optional location of the symbol (file path and 1-based line number), used to get more accurate results.',
+        properties: {
+          filePath: {
+            type: 'string',
+            description: 'File path where the symbol is located'
+          },
+          line: {
+            type: 'number',
+            description: 'Line number (1-based) where the symbol is located'
+          }
+        },
+        required: ['filePath', 'line']
       },
       format: {
         type: 'string',
@@ -29,51 +40,14 @@ export const hoverTool: Tool = {
     required: ['symbol'],
   },
   handler: async (args) => {
-    const { symbol, uri, format = 'compact' } = args;
+    const { symbol, symbolLocation, format = 'compact' } = args;
 
-    // Step 1: Find the symbol(s) with the given name
-    const searchQuery = symbol.includes('.') ? symbol.split('.').pop()! : symbol;
-    const symbols = await searchWorkspaceSymbols(searchQuery);
+    const matchingSymbols = await findSymbols(symbol, symbolLocation);
 
-    if (!symbols || symbols.length === 0) {
+    if (!matchingSymbols || matchingSymbols.length === 0) {
       return {
         error: `No symbol found with name "${symbol}"`,
-        suggestion: 'Try searching for the exact function/variable name',
-      };
-    }
-
-    // Step 2: Filter symbols to find exact matches
-    let matchingSymbols = symbols.filter((s) => {
-      // Match exact name or name with parentheses
-      const nameMatches =
-        s.name === searchQuery ||
-        s.name.startsWith(searchQuery + '(') ||
-        (symbol.includes('.') && s.containerName === symbol.split('.')[0]);
-
-      // Filter by URI if provided
-      const uriMatches = !uri || s.location.uri.toString() === uri;
-
-      return nameMatches && uriMatches;
-    });
-
-    // Prioritize non-method symbols when no container is specified
-    if (!symbol.includes('.') && matchingSymbols.length > 1) {
-      const standaloneSymbols = matchingSymbols.filter((s) => !s.containerName);
-      if (standaloneSymbols.length > 0) {
-        matchingSymbols = standaloneSymbols;
-      }
-    }
-
-    if (matchingSymbols.length === 0) {
-      return {
-        error: `No exact match found for "${symbol}"`,
-        suggestions: symbols.slice(0, 5).map((s) => ({
-          name: s.name,
-          kind: vscode.SymbolKind[s.kind],
-          container: s.containerName,
-          file: s.location.uri.fsPath.split('/').pop(),
-        })),
-        hint: 'Found these similar symbols. Try using one of these names exactly.',
+        suggestion: 'Try searching for the exact function/variable name or provide a valid symbolLocation',
       };
     }
 
@@ -86,19 +60,14 @@ export const hoverTool: Tool = {
       // For better hover results, position cursor in the middle of the symbol name
       const line = document.lineAt(sym.location.range.start.line);
       const lineText = line.text;
-      const symbolStartChar = lineText.indexOf(searchQuery, sym.location.range.start.character);
+      const symbolStartChar = sym.location.range.start.character;
 
       let hoverPosition: vscode.Position;
-      if (symbolStartChar !== -1) {
-        // Position cursor in the middle of the symbol name for better results
-        hoverPosition = new vscode.Position(
-          sym.location.range.start.line,
-          symbolStartChar + Math.floor(searchQuery.length / 2)
-        );
-      } else {
-        // Fallback to start position
-        hoverPosition = sym.location.range.start;
-      }
+      // Position cursor in the middle of the symbol name for better results
+      hoverPosition = new vscode.Position(
+        sym.location.range.start.line,
+        symbolStartChar + Math.floor(sym.name.length / 2)
+      );
 
       const hovers = await vscode.commands.executeCommand<vscode.Hover[]>(
         'vscode.executeHoverProvider',
@@ -197,7 +166,7 @@ function getCodeSnippet(
   for (let i = startLine; i <= endLine; i++) {
     const lineText = document.lineAt(i).text;
     const prefix = i === line ? '>' : ' ';
-    lines.push(`${prefix} ${i}: ${lineText}`);
+    lines.push(`${prefix} ${i + 1}: ${lineText}`);
   }
 
   return lines.join('\n');

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Tool } from '../types';
-import { searchWorkspaceSymbols } from '../utils/symbolProvider';
+import { findSymbols, SymbolLocation } from '../utils/symbolFinder';
 
 /**
  * Find similar symbol names for suggestions (simple Levenshtein distance)
@@ -49,13 +49,24 @@ export const refactor_renameTool: Tool = {
         type: 'string',
         description: 'Symbol name to rename (e.g., "calculateTotal", "UserService.login")',
       },
+      symbolLocation: {
+        type: 'object',
+        description: 'Optional location of the symbol (file path and 1-based line number), used to get more accurate results.',
+        properties: {
+          filePath: {
+            type: 'string',
+            description: 'File path where the symbol is located'
+          },
+          line: {
+            type: 'number',
+            description: 'Line number (1-based) where the symbol is located'
+          }
+        },
+        required: ['filePath', 'line']
+      },
       newName: {
         type: 'string',
         description: 'The new name for the symbol',
-      },
-      uri: {
-        type: 'string',
-        description: 'Optional: File URI to disambiguate if multiple symbols exist',
       },
       format: {
         type: 'string',
@@ -68,18 +79,15 @@ export const refactor_renameTool: Tool = {
     required: ['symbol', 'newName'],
   },
   handler: async (args: any) => {
-    const { symbol, newName, uri: providedUri, format = 'compact' } = args;
+    const { symbol, newName, format = 'compact', symbolLocation } = args;
 
     try {
       // Search for the symbol across workspace
-      const searchResult = await searchWorkspaceSymbols(symbol);
+      const searchResult = await findSymbols(symbol, symbolLocation);
 
       if (!searchResult || searchResult.length === 0) {
         // Find similar symbols for suggestions
-        const allSymbols = await vscode.commands.executeCommand<vscode.SymbolInformation[]>(
-          'vscode.executeWorkspaceSymbolProvider',
-          ''
-        );
+        const allSymbols = await findSymbols('');
 
         const symbolNames = Array.from(new Set(allSymbols?.map((s) => s.name) || []));
         const suggestions = findSimilarNames(symbol, symbolNames);
@@ -96,27 +104,13 @@ export const refactor_renameTool: Tool = {
           hint:
             suggestions.length > 0
               ? `Did you mean '${suggestions[0]}'? Check the spelling.`
-              : 'Check spelling or use qualified name like "ClassName.methodName"',
+              : 'Check spelling or use qualified name like "ClassName.methodName" or provide a valid symbolLocation',
         };
       }
 
       // Filter by provided URI if specified
       let matches = searchResult;
-      if (providedUri) {
-        const targetUri = vscode.Uri.parse(providedUri);
-        matches = searchResult.filter((s) => s.location.uri.toString() === targetUri.toString());
-
-        if (matches.length === 0) {
-          return {
-            error: `Symbol '${symbol}' not found in file ${providedUri}`,
-            availableFiles: searchResult.map((s) =>
-              vscode.workspace.asRelativePath(s.location.uri)
-            ),
-            hint: 'Symbol exists in other files. Remove uri parameter to rename across all files.',
-          };
-        }
-      }
-
+      
       // Handle multiple matches
       if (matches.length > 1) {
         // Try to find exact match (not container prefix)
@@ -145,7 +139,7 @@ export const refactor_renameTool: Tool = {
                 ? `Use '${m.containerName}.${symbol}' to target this specifically`
                 : null,
             })),
-            hint: 'Multiple symbols found. Use qualified name (e.g., "Class.method") or provide file URI.',
+            hint: 'Multiple symbols found. Use qualified name (e.g., "Class.method") or provide file URI or symbolLocation.',
           };
         }
       }

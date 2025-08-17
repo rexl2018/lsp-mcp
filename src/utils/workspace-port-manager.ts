@@ -83,8 +83,8 @@ export class WorkspacePortManager {
    * 获取端口注册表文件路径
    */
   private getRegistryFilePath(): string {
-    const os = require('os');
-    return path.join(os.tmpdir(), WorkspacePortManager.PORT_REGISTRY_FILE);
+    // 使用/tmp目录而不是os.tmpdir()
+    return path.join('/tmp', WorkspacePortManager.PORT_REGISTRY_FILE);
   }
 
   /**
@@ -97,9 +97,15 @@ export class WorkspacePortManager {
     try {
       const data = await fs.readFile(registryPath, 'utf8');
       const registry = JSON.parse(data) as PortRegistryEntry[];
-      return Array.isArray(registry) ? registry : [];
+      if (!Array.isArray(registry)) {
+        console.warn('Port registry is not an array, resetting to empty array');
+        return [];
+      }
+      console.log(`Read ${registry.length} entries from port registry`);
+      return registry;
     } catch (error) {
       // 文件不存在或格式错误，返回空数组
+      console.log('Port registry file not found or invalid, creating new registry');
       return [];
     }
   }
@@ -109,10 +115,17 @@ export class WorkspacePortManager {
    */
   private async writePortRegistry(registry: PortRegistryEntry[]): Promise<void> {
     const fs = require('fs').promises;
+    const path = require('path');
     const registryPath = this.getRegistryFilePath();
     
     try {
+      // 确保目录存在
+      const dirPath = path.dirname(registryPath);
+      await fs.mkdir(dirPath, { recursive: true });
+      
+      // 写入文件
       await fs.writeFile(registryPath, JSON.stringify(registry, null, 2), 'utf8');
+      console.log(`Successfully wrote ${registry.length} entries to port registry`);
     } catch (error) {
       console.error('Failed to write port registry:', error);
     }
@@ -123,8 +136,13 @@ export class WorkspacePortManager {
    */
   private async cleanupExpiredEntries(): Promise<void> {
     const registry = await this.readPortRegistry();
+    if (registry.length === 0) {
+      return; // 没有条目需要清理
+    }
+    
     const now = Date.now();
     const activeEntries: PortRegistryEntry[] = [];
+    const expiredEntries: PortRegistryEntry[] = [];
 
     for (const entry of registry) {
       // 检查进程是否还在运行
@@ -134,11 +152,13 @@ export class WorkspacePortManager {
       if (isProcessAlive && isNotExpired) {
         activeEntries.push(entry);
       } else {
-        console.log(`Cleaning up expired port entry: ${entry.workspaceName}:${entry.ssePort}`);
+        expiredEntries.push(entry);
+        console.log(`Cleaning up expired port entry: ${entry.workspaceName}:${entry.ssePort} (Process: ${entry.processId}, Age: ${Math.round((now - entry.timestamp) / 1000)}s)`);
       }
     }
 
-    if (activeEntries.length !== registry.length) {
+    if (expiredEntries.length > 0) {
+      console.log(`Cleaned up ${expiredEntries.length} expired entries, ${activeEntries.length} active entries remain`);
       await this.writePortRegistry(activeEntries);
     }
   }
@@ -178,10 +198,12 @@ export class WorkspacePortManager {
     
     if (!usedPorts.has(preferredPort) && await PortManager.isPortAvailable(preferredPort)) {
       assignedPort = preferredPort;
+      console.log(`Using preferred port ${preferredPort} for workspace: ${this.workspaceName}`);
     } else {
+      console.log(`Preferred port ${preferredPort} is not available, finding another port...`);
       // 查找可用端口
       assignedPort = await PortManager.findAvailablePort(
-        preferredPort,
+        preferredPort + 1, // 从下一个端口开始查找，避免使用默认端口
         WorkspacePortManager.DEFAULT_PORT_RANGE
       );
       
@@ -192,6 +214,7 @@ export class WorkspacePortManager {
           WorkspacePortManager.DEFAULT_PORT_RANGE
         );
       }
+      console.log(`Found available port ${assignedPort} for workspace: ${this.workspaceName}`);
     }
 
     // 注册端口

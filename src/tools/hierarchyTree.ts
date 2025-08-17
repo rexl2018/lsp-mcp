@@ -39,9 +39,20 @@ export const hierarchyTreeTool: Tool = {
         minimum: 1,
         maximum: 20
       },
-      uri: {
-        type: 'string',
-        description: 'Optional: limit search to specific file URI'
+      symbolLocation: {
+        type: 'object',
+        description: 'Optional location of the symbol (file path and 1-based line number), used to get more accurate results.',
+        properties: {
+          filePath: {
+            type: 'string',
+            description: 'File path where the symbol is located'
+          },
+          line: {
+            type: 'number',
+            description: 'Line number (1-based) where the symbol is located'
+          }
+        },
+        required: ['filePath', 'line']
       },
       includeDetails: {
         type: 'boolean',
@@ -153,20 +164,26 @@ function validateAndNormalizeOptions(args: any): HierarchyTreeOptions {
     symbol: args.symbol.trim(),
     direction: args.direction || 'incoming',
     depth: Math.min(Math.max(args.depth || 5, 1), 50),
-    uri: args.uri,
     includeDetails: Boolean(args.includeDetails),
     maxNodes: Math.min(Math.max(args.maxNodes || 50, 8), 200)
   };
+  
+  // Add symbolLocation if provided
+  if (args.symbolLocation && 
+      typeof args.symbolLocation.filePath === 'string' && 
+      typeof args.symbolLocation.line === 'number') {
+    options.symbolLocation = {
+      filePath: args.symbolLocation.filePath,
+      line: args.symbolLocation.line
+    };
+  }
   
   // Validate direction
   if (!['incoming', 'outgoing', 'both'].includes(options.direction)) {
     throw new Error('Direction must be one of: incoming, outgoing, both');
   }
   
-  // Validate URI format if provided
-  if (options.uri && !isValidUri(options.uri)) {
-    throw new Error('Invalid URI format');
-  }
+
   
   return options;
 }
@@ -253,13 +270,12 @@ export async function createDetailedHierarchyTree(
 /**
  * Check if a symbol exists in the workspace
  */
-export async function symbolExists(symbol: string, uri?: string): Promise<boolean> {
+export async function symbolExists(symbol: string): Promise<boolean> {
   try {
     const result = await hierarchyTreeTool.handler({
       symbol,
       depth: 1,
-      maxNodes: 1,
-      uri
+      maxNodes: 1
     });
     
     return !result.error && result.metadata.totalNodes > 0;

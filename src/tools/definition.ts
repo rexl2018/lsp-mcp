@@ -1,10 +1,6 @@
 import * as vscode from 'vscode';
 import { Tool } from './types';
-import {
-  searchWorkspaceSymbols,
-  getDocumentSymbols,
-  findSymbolByName,
-} from './utils/symbolProvider';
+import { findSymbols, SymbolLocation } from './utils/symbolFinder';
 
 export const definitionTool: Tool = {
   name: 'definition',
@@ -18,6 +14,21 @@ export const definitionTool: Tool = {
         description:
           'Symbol name to find definition for (e.g., "functionName", "ClassName", "ClassName.methodName")',
       },
+      symbolLocation: {
+        type: 'object',
+        description: 'Optional location of the symbol (file path and 1-based line number), used to get more accurate results.',
+        properties: {
+          filePath: {
+            type: 'string',
+            description: 'File path where the symbol is located'
+          },
+          line: {
+            type: 'number',
+            description: 'Line number (1-based) where the symbol is located'
+          }
+        },
+        required: ['filePath', 'line']
+      },
       format: {
         type: 'string',
         enum: ['compact', 'detailed'],
@@ -29,143 +40,69 @@ export const definitionTool: Tool = {
     required: ['symbol'],
   },
   handler: async (args) => {
-    const { symbol, format = 'compact' } = args;
-    return await findDefinitionBySymbol(symbol, format);
+    const { symbol, symbolLocation, format = 'compact' } = args;
+    return await findDefinitionBySymbol(symbol, symbolLocation, format);
   },
 };
 
 // Helper function for symbol-based lookup
 async function findDefinitionBySymbol(
   symbolName: string,
+  symbolLocation: SymbolLocation | undefined,
   format: 'compact' | 'detailed'
 ): Promise<any> {
-  // Parse symbol name (e.g., "ClassName.methodName" or just "functionName")
-  const parts = symbolName.split('.');
-  const primarySymbol = parts[0];
-  const memberSymbol = parts[1];
-
-  // Search for the symbol in the workspace
-  const symbols = await searchWorkspaceSymbols(primarySymbol);
+  // Use the unified findSymbols function
+  const symbols = await findSymbols(symbolName, symbolLocation);
 
   if (!symbols || symbols.length === 0) {
     return {
       symbol: symbolName,
-      message: `Symbol '${symbolName}' not found in workspace`,
+      message: `No definition found for symbol '${symbolName}'`,
       definitions: [],
     };
-  }
+  }  const allDefinitions: any[] = [];
 
-  // Filter to find exact matches (not partial)
-  // Note: VS Code may append () to function names, so we need to handle that
-  const exactMatches = symbols.filter((sym) => {
-    const baseName = sym.name.replace(/\(\)$/, ''); // Remove trailing ()
-    return baseName === primarySymbol;
-  });
-  const matchesToUse = exactMatches.length > 0 ? exactMatches : symbols;
-
-  const allDefinitions: any[] = [];
-
-  for (const sym of matchesToUse) {
+  for (const sym of symbols) {
     try {
-      // If looking for a member (e.g., ClassName.methodName)
-      if (memberSymbol) {
-        // For class members, we need to find the member within the class
-        const document = await vscode.workspace.openTextDocument(sym.location.uri);
-
-        // Get document symbols to find the member
-        const docSymbols = await getDocumentSymbols(document);
-
-        if (docSymbols) {
-          // Find the class/container
-          const container = findSymbolByName(docSymbols, primarySymbol);
-          if (container && container.children) {
-            // Find the member within the container
-            const member = findSymbolByName(container.children, memberSymbol);
-            if (member) {
-              if (format === 'compact') {
-                allDefinitions.push({
-                  symbol: [
-                    member.name,
-                    vscode.SymbolKind[member.kind].toLowerCase(),
-                    sym.location.uri.fsPath,
-                    member.range.start.line + 1,
-                  ],
-                  uri: sym.location.uri.toString(),
-                  range: [
-                    member.range.start.line + 1,
-                    member.range.start.character,
-                    member.range.end.line + 1,
-                    member.range.end.character,
-                  ],
-                });
-              } else {
-                allDefinitions.push({
-                  symbol: {
-                    name: member.name,
-                    kind: vscode.SymbolKind[member.kind],
-                    container: container.name,
-                    file: sym.location.uri.fsPath,
-                    line: member.range.start.line + 1,
-                  },
-                  uri: sym.location.uri.toString(),
-                  range: {
-                    start: {
-                      line: member.range.start.line + 1,
-                      character: member.range.start.character,
-                    },
-                    end: {
-                      line: member.range.end.line + 1,
-                      character: member.range.end.character,
-                    },
-                  },
-                });
-              }
-            }
-          }
-        }
+      if (format === 'compact') {
+        allDefinitions.push({
+          symbol: [
+            sym.name,
+            vscode.SymbolKind[sym.kind].toLowerCase(),
+            sym.location.uri.fsPath,
+            sym.location.range.start.line + 1,
+          ],
+          uri: sym.location.uri.toString(),
+          range: [
+            sym.location.range.start.line + 1,
+            sym.location.range.start.character,
+            sym.location.range.end.line + 1,
+            sym.location.range.end.character,
+          ],
+        });
       } else {
-        // For standalone symbols, use the symbol location directly
-        if (format === 'compact') {
-          allDefinitions.push({
-            symbol: [
-              sym.name,
-              vscode.SymbolKind[sym.kind].toLowerCase(),
-              sym.location.uri.fsPath,
-              sym.location.range.start.line + 1,
-            ],
-            uri: sym.location.uri.toString(),
-            range: [
-              sym.location.range.start.line + 1,
-              sym.location.range.start.character,
-              sym.location.range.end.line + 1,
-              sym.location.range.end.character,
-            ],
-          });
-        } else {
-          allDefinitions.push({
-            symbol: {
-              name: sym.name,
-              kind: vscode.SymbolKind[sym.kind],
-              container: sym.containerName,
-              file: sym.location.uri.fsPath,
+        allDefinitions.push({
+          symbol: {
+            name: sym.name,
+            kind: vscode.SymbolKind[sym.kind],
+            container: sym.containerName,
+            file: sym.location.uri.fsPath,
+            line: sym.location.range.start.line + 1,
+          },
+          uri: sym.location.uri.toString(),
+          range: {
+            start: {
               line: sym.location.range.start.line + 1,
+              character: sym.location.range.start.character,
             },
-            uri: sym.location.uri.toString(),
-            range: {
-              start: {
-                line: sym.location.range.start.line + 1,
-                character: sym.location.range.start.character,
-              },
-              end: {
-                line: sym.location.range.end.line + 1,
-                character: sym.location.range.end.character,
-              },
+            end: {
+              line: sym.location.range.end.line + 1,
+              character: sym.location.range.end.character,
             },
-          });
-        }
+          },
+        });
       }
     } catch (error) {
-      // Skip symbols that can't be processed
       console.error(`Error processing symbol ${sym.name}:`, error);
     }
   }
@@ -173,9 +110,7 @@ async function findDefinitionBySymbol(
   if (allDefinitions.length === 0) {
     return {
       symbol: symbolName,
-      message: memberSymbol
-        ? `Member '${memberSymbol}' not found in '${primarySymbol}'`
-        : `No definition found for symbol '${symbolName}'`,
+      message: `No definition found for symbol '${symbolName}'`,
       definitions: [],
     };
   }

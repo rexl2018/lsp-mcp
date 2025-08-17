@@ -4,6 +4,7 @@
  */
 
 import * as vscode from 'vscode';
+import { findSymbols } from './symbolFinder';
 import { HierarchyNode, HierarchyTreeOptions, BuilderStats, CallHierarchyItem } from '../types/hierarchy';
 import { CircularDetector, createCircularDetector } from './circularDetector';
 
@@ -32,7 +33,7 @@ export class HierarchyTreeBuilder {
 
     try {
       // Find the root symbol
-      const rootItems = await this.findSymbol(options.symbol, options.uri);
+      const rootItems = await this.findSymbol(options.symbol, options.symbolLocation);
       if (rootItems.length === 0) {
         throw new Error(`Symbol '${options.symbol}' not found`);
       }
@@ -148,47 +149,9 @@ export class HierarchyTreeBuilder {
   /**
    * Find symbol in workspace
    */
-  private async findSymbol(symbolName: string, uri?: string): Promise<CallHierarchyItem[]> {
-    // Import searchWorkspaceSymbols for better symbol finding with retry logic
-    const { searchWorkspaceSymbols } = await import('./symbolProvider');
-    
-    // Use the same symbol search logic as callHierarchy tool
-    const searchQuery = symbolName.includes('.') ? symbolName.split('.').pop()! : symbolName;
-    const workspaceSymbols = await searchWorkspaceSymbols(searchQuery);
-
-    if (!workspaceSymbols || workspaceSymbols.length === 0) {
-      return [];
-    }
-
-    // Filter symbols to find exact matches (same logic as callHierarchy)
-    let matchingSymbols = workspaceSymbols.filter((s) => {
-      // Match exact name or name with parentheses
-      const nameMatches =
-        s.name === searchQuery ||
-        s.name.startsWith(searchQuery + '(') ||
-        (symbolName.includes('.') && s.containerName === symbolName.split('.')[0]);
-
-      // Filter by URI if provided
-      const uriMatches = !uri || s.location.uri.toString() === uri;
-
-      return nameMatches && uriMatches;
-    });
-
-    // Prioritize non-method symbols when no container is specified
-    if (!symbolName.includes('.') && matchingSymbols.length > 1) {
-      const standaloneSymbols = matchingSymbols.filter((s) => !s.containerName);
-      if (standaloneSymbols.length > 0) {
-        matchingSymbols = standaloneSymbols;
-      }
-    }
-
-    const items: CallHierarchyItem[] = [];
-    
-    for (const symbol of matchingSymbols) {
-      items.push(this.symbolToCallHierarchyItem(symbol));
-    }
-
-    return items;
+  private async findSymbol(symbolName: string, symbolLocation?: { filePath: string, line: number }): Promise<CallHierarchyItem[]> {
+    const symbols = await findSymbols(symbolName, symbolLocation);
+    return symbols.map(s => this.symbolToCallHierarchyItem(s));
   }
 
   /**

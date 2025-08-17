@@ -142,7 +142,7 @@ async function testClientDiscovery() {
     console.log(`  ✅ Created discovery file: ${discoveryPath}`);
     
     // 动态导入 ClientDiscovery
-    const { ClientDiscovery } = require('../out/utils/client-discovery');
+    const { ClientDiscovery } = require('../../out/utils/client-discovery');
     
     // 测试从工作区发现
     const discovered = await ClientDiscovery.discoverFromWorkspace(workspace);
