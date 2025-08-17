@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Tool } from './types';
-import { searchWorkspaceSymbols } from './utils/symbolProvider';
+import { findSymbols, SymbolLocation } from './utils/symbolFinder';
 
 export const callHierarchyTool: Tool = {
   name: 'callHierarchy',
@@ -14,7 +14,21 @@ export const callHierarchyTool: Tool = {
         description:
           'Name of the function/method to analyze (e.g., "calculateSum", "add", "Calculator.multiply")',
       },
-
+      symbolLocation: {
+        type: 'object',
+        description: 'Optional location of the symbol (file path and 1-based line number), used to get more accurate results.',
+        properties: {
+          filePath: {
+            type: 'string',
+            description: 'File path where the symbol is located'
+          },
+          line: {
+            type: 'number',
+            description: 'Line number (1-based) where the symbol is located'
+          }
+        },
+        required: ['filePath', 'line']
+      },
       direction: {
         type: 'string',
         enum: ['incoming', 'outgoing', 'both'],
@@ -34,49 +48,14 @@ export const callHierarchyTool: Tool = {
     required: ['symbol', 'direction'],
   },
   handler: async (args) => {
-    const { symbol, direction = 'incoming', format = 'compact' } = args;
+    const { symbol, direction = 'incoming', format = 'compact', symbolLocation } = args;
 
-    // Step 1: Find the symbol(s) with the given name
-    const searchQuery = symbol.includes('.') ? symbol.split('.').pop()! : symbol;
-    const symbols = await searchWorkspaceSymbols(searchQuery);
+    const matchingSymbols = await findSymbols(symbol, symbolLocation);
 
-    if (!symbols || symbols.length === 0) {
+    if (!matchingSymbols || matchingSymbols.length === 0) {
       return {
         error: `No symbol found with name "${symbol}"`,
-        suggestion: 'Try searching for the exact function name without parameters or class prefix',
-      };
-    }
-
-    // Step 2: Filter symbols to find exact matches
-    let matchingSymbols = symbols.filter((s) => {
-      // Match exact name or name with parentheses
-      const nameMatches =
-        s.name === searchQuery ||
-        s.name.startsWith(searchQuery + '(') ||
-        (symbol.includes('.') && s.containerName === symbol.split('.')[0]);
-
-      return nameMatches;
-    });
-
-    // Step 2.5: Prioritize non-method symbols when no container is specified
-    if (!symbol.includes('.') && matchingSymbols.length > 1) {
-      // If searching for just "add", prefer standalone functions over methods
-      const standaloneSymbols = matchingSymbols.filter((s) => !s.containerName);
-      if (standaloneSymbols.length > 0) {
-        matchingSymbols = standaloneSymbols;
-      }
-    }
-
-    if (matchingSymbols.length === 0) {
-      return {
-        error: `No exact match found for "${symbol}"`,
-        suggestions: symbols.slice(0, 5).map((s) => ({
-          name: s.name,
-          kind: vscode.SymbolKind[s.kind],
-          container: s.containerName,
-          file: s.location.uri.fsPath.split('/').pop(),
-        })),
-        hint: 'Found these similar symbols. Try using one of these names exactly.',
+        suggestion: 'Try searching for the exact function name without parameters or class prefix, or provide a valid symbolLocation',
       };
     }
 
@@ -89,19 +68,14 @@ export const callHierarchyTool: Tool = {
       // For better results, position cursor in the middle of the symbol name
       const line = document.lineAt(sym.location.range.start.line);
       const lineText = line.text;
-      const symbolStartChar = lineText.indexOf(searchQuery, sym.location.range.start.character);
+      const symbolStartChar = sym.location.range.start.character;
 
       let position: vscode.Position;
-      if (symbolStartChar !== -1) {
-        // Position cursor in the middle of the symbol name for better results
-        position = new vscode.Position(
-          sym.location.range.start.line,
-          symbolStartChar + Math.floor(searchQuery.length / 2)
-        );
-      } else {
-        // Fallback to start position
-        position = sym.location.range.start;
-      }
+      // Position cursor in the middle of the symbol name for better results
+      position = new vscode.Position(
+        sym.location.range.start.line,
+        symbolStartChar + Math.floor(sym.name.length / 2)
+      );
 
       // Get call hierarchy item
       const items = await vscode.commands.executeCommand<vscode.CallHierarchyItem[]>(

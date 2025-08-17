@@ -1,10 +1,6 @@
 import * as vscode from 'vscode';
 import { Tool } from './types';
-import {
-  searchWorkspaceSymbols,
-  getDocumentSymbols,
-  findSymbolByName,
-} from './utils/symbolProvider';
+import { findSymbols, SymbolLocation } from './utils/symbolFinder';
 
 export const referencesTool: Tool = {
   name: 'references',
@@ -17,6 +13,21 @@ export const referencesTool: Tool = {
         type: 'string',
         description:
           'Symbol name to find references for (e.g., "functionName", "ClassName", "ClassName.methodName")',
+      },
+      symbolLocation: {
+        type: 'object',
+        description: 'Optional location of the symbol (file path and 1-based line number), used to get more accurate results.',
+        properties: {
+          filePath: {
+            type: 'string',
+            description: 'File path where the symbol is located'
+          },
+          line: {
+            type: 'number',
+            description: 'Line number (1-based) where the symbol is located'
+          }
+        },
+        required: ['filePath', 'line']
       },
       includeDeclaration: {
         type: 'boolean',
@@ -33,8 +44,8 @@ export const referencesTool: Tool = {
     required: ['symbol'],
   },
   handler: async (args) => {
-    const { symbol, includeDeclaration = true, format = 'compact' } = args;
-    return await findReferencesBySymbol(symbol, includeDeclaration, format);
+    const { symbol, includeDeclaration = true, format = 'compact', symbolLocation } = args;
+    return await findReferencesBySymbol(symbol, includeDeclaration, format, symbolLocation);
   },
 };
 
@@ -42,72 +53,28 @@ export const referencesTool: Tool = {
 async function findReferencesBySymbol(
   symbolName: string,
   includeDeclaration: boolean,
-  format: 'compact' | 'detailed'
+  format: 'compact' | 'detailed',
+  symbolLocation: SymbolLocation | undefined
 ): Promise<any> {
-  // Parse symbol name (e.g., "ClassName.methodName" or just "functionName")
-  const parts = symbolName.split('.');
-  const primarySymbol = parts[0];
-  const memberSymbol = parts[1];
-
   // Search for the symbol in the workspace
-  const symbols = await searchWorkspaceSymbols(primarySymbol);
+  const symbols = await findSymbols(symbolName, symbolLocation);
 
   if (!symbols || symbols.length === 0) {
     return {
       symbol: symbolName,
-      message: `Symbol '${symbolName}' not found in workspace`,
+      message: `No symbol found with name "${symbolName}"`,
       references: [],
       totalReferences: 0,
     };
   }
 
-  // Filter to find exact matches (not partial)
-  // Note: VS Code may append () to function names, so we need to handle that
-  const exactMatches = symbols.filter((sym) => {
-    const baseName = sym.name.replace(/\(\)$/, ''); // Remove trailing ()
-    return baseName === primarySymbol;
-  });
-  const matchesToUse = exactMatches.length > 0 ? exactMatches : symbols;
-
   const allReferences: any[] = [];
   const processedLocations = new Set<string>();
 
-  for (const sym of matchesToUse) {
+  for (const sym of symbols) {
     try {
-      let targetPosition: vscode.Position;
-      let targetUri: vscode.Uri;
-
-      // If looking for a member (e.g., ClassName.methodName)
-      if (memberSymbol) {
-        // For class members, we need to find the member within the class
-        const document = await vscode.workspace.openTextDocument(sym.location.uri);
-
-        // Get document symbols to find the member
-        const docSymbols = await getDocumentSymbols(document);
-
-        if (docSymbols) {
-          // Find the class/container
-          const container = findSymbolByName(docSymbols, primarySymbol);
-          if (container && container.children) {
-            // Find the member within the container
-            const member = findSymbolByName(container.children, memberSymbol);
-            if (member) {
-              targetPosition = member.range.start;
-              targetUri = sym.location.uri;
-            } else {
-              continue; // Member not found in this container
-            }
-          } else {
-            continue; // Container not found
-          }
-        } else {
-          continue; // No document symbols
-        }
-      } else {
-        // For standalone symbols, use the symbol location directly
-        targetPosition = sym.location.range.start;
-        targetUri = sym.location.uri;
-      }
+      const targetPosition = sym.location.range.start;
+      const targetUri = sym.location.uri;
 
       // Find references from this position
       const references = await vscode.commands.executeCommand<vscode.Location[]>(
@@ -120,21 +87,12 @@ async function findReferencesBySymbol(
         // Filter out declaration if requested
         let filteredRefs = references;
         if (!includeDeclaration) {
-          const definitions = await vscode.commands.executeCommand<vscode.Location[]>(
-            'vscode.executeDefinitionProvider',
-            targetUri,
-            targetPosition
-          );
-
-          if (definitions && definitions.length > 0) {
-            filteredRefs = references.filter((ref) => {
-              if (!ref || !ref.uri || !ref.range) return true;
-              return !definitions.some((def) => {
-                if (!def || !def.uri || !def.range) return false;
-                return def.uri.toString() === ref.uri.toString() && def.range.isEqual(ref.range);
-              });
-            });
-          }
+          // The symbol's own location is its declaration.
+          // We can filter it out directly without another provider call.
+          filteredRefs = references.filter(ref => {
+            if (!ref || !ref.uri || !ref.range) return true;
+            return !(ref.uri.toString() === sym.location.uri.toString() && ref.range.isEqual(sym.location.range));
+          });
         }
 
         // Add references, avoiding duplicates
