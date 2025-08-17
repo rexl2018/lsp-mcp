@@ -15,12 +15,6 @@ export const callHierarchyTool: Tool = {
           'Name of the function/method to analyze (e.g., "calculateSum", "add", "Calculator.multiply")',
       },
 
-      // Optional: limit search to specific file
-      uri: {
-        type: 'string',
-        description: 'File URI to search in (optional - searches entire workspace if not provided)',
-      },
-
       direction: {
         type: 'string',
         enum: ['incoming', 'outgoing', 'both'],
@@ -40,7 +34,7 @@ export const callHierarchyTool: Tool = {
     required: ['symbol', 'direction'],
   },
   handler: async (args) => {
-    const { symbol, uri, direction = 'incoming', format = 'compact' } = args;
+    const { symbol, direction = 'incoming', format = 'compact' } = args;
 
     // Step 1: Find the symbol(s) with the given name
     const searchQuery = symbol.includes('.') ? symbol.split('.').pop()! : symbol;
@@ -61,10 +55,7 @@ export const callHierarchyTool: Tool = {
         s.name.startsWith(searchQuery + '(') ||
         (symbol.includes('.') && s.containerName === symbol.split('.')[0]);
 
-      // Filter by URI if provided
-      const uriMatches = !uri || s.location.uri.toString() === uri;
-
-      return nameMatches && uriMatches;
+      return nameMatches;
     });
 
     // Step 2.5: Prioritize non-method symbols when no container is specified

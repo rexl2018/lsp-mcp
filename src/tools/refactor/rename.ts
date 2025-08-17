@@ -53,10 +53,6 @@ export const refactor_renameTool: Tool = {
         type: 'string',
         description: 'The new name for the symbol',
       },
-      uri: {
-        type: 'string',
-        description: 'Optional: File URI to disambiguate if multiple symbols exist',
-      },
       format: {
         type: 'string',
         enum: ['compact', 'detailed'],
@@ -68,7 +64,7 @@ export const refactor_renameTool: Tool = {
     required: ['symbol', 'newName'],
   },
   handler: async (args: any) => {
-    const { symbol, newName, uri: providedUri, format = 'compact' } = args;
+    const { symbol, newName, format = 'compact' } = args;
 
     try {
       // Search for the symbol across workspace
@@ -102,21 +98,7 @@ export const refactor_renameTool: Tool = {
 
       // Filter by provided URI if specified
       let matches = searchResult;
-      if (providedUri) {
-        const targetUri = vscode.Uri.parse(providedUri);
-        matches = searchResult.filter((s) => s.location.uri.toString() === targetUri.toString());
-
-        if (matches.length === 0) {
-          return {
-            error: `Symbol '${symbol}' not found in file ${providedUri}`,
-            availableFiles: searchResult.map((s) =>
-              vscode.workspace.asRelativePath(s.location.uri)
-            ),
-            hint: 'Symbol exists in other files. Remove uri parameter to rename across all files.',
-          };
-        }
-      }
-
+      
       // Handle multiple matches
       if (matches.length > 1) {
         // Try to find exact match (not container prefix)

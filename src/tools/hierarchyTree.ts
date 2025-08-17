@@ -39,10 +39,6 @@ export const hierarchyTreeTool: Tool = {
         minimum: 1,
         maximum: 20
       },
-      uri: {
-        type: 'string',
-        description: 'Optional: limit search to specific file URI'
-      },
       includeDetails: {
         type: 'boolean',
         description: 'Include file paths and line numbers in the graph',

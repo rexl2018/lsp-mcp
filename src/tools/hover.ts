@@ -14,10 +14,6 @@ export const hoverTool: Tool = {
         description:
           'Name of the symbol to get hover info for (e.g., "calculateSum", "Calculator.multiply")',
       },
-      uri: {
-        type: 'string',
-        description: 'File URI to search in (optional - searches entire workspace if not provided)',
-      },
       format: {
         type: 'string',
         enum: ['compact', 'detailed'],
@@ -29,7 +25,7 @@ export const hoverTool: Tool = {
     required: ['symbol'],
   },
   handler: async (args) => {
-    const { symbol, uri, format = 'compact' } = args;
+    const { symbol, format = 'compact' } = args;
 
     // Step 1: Find the symbol(s) with the given name
     const searchQuery = symbol.includes('.') ? symbol.split('.').pop()! : symbol;
@@ -50,10 +46,7 @@ export const hoverTool: Tool = {
         s.name.startsWith(searchQuery + '(') ||
         (symbol.includes('.') && s.containerName === symbol.split('.')[0]);
 
-      // Filter by URI if provided
-      const uriMatches = !uri || s.location.uri.toString() === uri;
-
-      return nameMatches && uriMatches;
+      return nameMatches;
     });
 
     // Prioritize non-method symbols when no container is specified
