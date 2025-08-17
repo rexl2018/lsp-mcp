@@ -13,6 +13,8 @@ export interface HierarchyNode {
   file: string;
   /** Line number */
   line: number;
+  /** Character number */
+  character: number;
   /** Hierarchy level depth */
   level: number;
   /** Child nodes */
@@ -40,6 +42,8 @@ export interface HierarchyTreeOptions {
   includeDetails: boolean;
   /** Maximum number of nodes to prevent oversized graphs */
   maxNodes: number;
+  /** Paths to skip (glob patterns similar to .gitignore) */
+  skipPaths?: string[];
 }
 
 export interface HierarchyTreeResult {
