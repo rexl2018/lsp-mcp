@@ -34,29 +34,16 @@ Download the `.vsix` file from [Releases](https://github.com/rexl2018/lsp-mcp/re
 
 The MCP server connects directly to VS Code via SSE. We provide a simple stdio bridge for easy configuration.
 
-### Option 1: Auto-Discovery (Recommended)
+### Multi-Instance Isolation
 
-For automatic server discovery across multiple VS Code instances:
+**Important**: To prevent cross-workspace connections when running multiple VS Code instances, you **must** specify the workspace path in your Claude Desktop configuration.
+
+### Configuration
+
+Edit your Claude Desktop configuration file:
 
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "vscode": {
-      "command": "node",
-      "args": ["/path/to/lsp-mcp/bin/mcp-stdio-bridge.js", "--auto-discover"]
-    }
-  }
-}
-```
-
-**Note**: Replace `/path/to/lsp-mcp` with the actual path to this extension directory.
-
-### Option 2: Workspace-Specific Configuration
-
-To connect to a specific workspace:
 
 ```json
 {
@@ -69,7 +56,55 @@ To connect to a specific workspace:
 }
 ```
 
-### Option 3: Manual Port Configuration
+**Configuration Notes**:
+- Replace `/path/to/lsp-mcp` with the actual path to this extension directory
+- Replace `/path/to/your/workspace` with the absolute path to your VS Code workspace
+- Each VS Code workspace should have its own Claude Desktop configuration with the correct workspace path
+- The `--workspace` parameter ensures the bridge only connects to the MCP server for that specific workspace
+
+### Alternative: Auto-Discovery (Not Recommended for Multi-Instance)
+
+For single-instance usage, you can use auto-discovery:
+
+```json
+{
+  "mcpServers": {
+    "vscode": {
+      "command": "node",
+      "args": ["/path/to/lsp-mcp/bin/mcp-stdio-bridge.js", "--auto-discover"]
+    }
+  }
+}
+```
+
+**Warning**: Auto-discovery may connect to any available MCP server and should not be used when running multiple VS Code instances.
+
+### VS Code Extension Configuration (Alternative)
+
+If you're using this extension within VS Code itself, you can create a workspace-specific configuration using VS Code variables:
+
+**Create a `.vscode/settings.json` file in your workspace:**
+
+```json
+{
+  "claude.mcpServers": {
+    "vscode": {
+      "command": "node",
+      "args": ["/path/to/lsp-mcp/bin/mcp-stdio-bridge.js", "--workspace", "${workspaceFolder}"]
+    }
+  }
+}
+```
+
+**Benefits of this approach:**
+- Automatically uses the current workspace folder path
+- No need to manually specify workspace paths
+- Each VS Code workspace gets its own isolated configuration
+- Works seamlessly with VS Code's variable substitution
+
+**Note**: Replace `/path/to/lsp-mcp` with the actual path to this extension directory.
+
+### Manual Port Configuration
 
 If you need to specify a custom port:
 

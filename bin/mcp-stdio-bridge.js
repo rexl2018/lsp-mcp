@@ -462,8 +462,9 @@ async function main() {
   
   let serverInfo = { host, port, workspaceInfo: null };
   
-  // 如果启用自动发现或提供了工作区路径，尝试发现服务器
-  if (autoDiscover || workspacePath) {
+  // 只有在明确提供工作区路径或启用自动发现时才尝试发现服务器
+  // 重要：如果没有工作区路径，不应该连接到任何服务器，避免跨工作区连接
+  if (workspacePath || autoDiscover) {
     const discovered = await discoverMcpServer(workspacePath, port);
     if (discovered) {
       serverInfo = discovered;
@@ -471,11 +472,20 @@ async function main() {
       if (serverInfo.workspaceInfo) {
         console.error(`[Bridge] Workspace: ${serverInfo.workspaceInfo.name} (${serverInfo.workspaceInfo.path})`);
       }
-    } else if (autoDiscover) {
-      console.error('[Bridge] ❌ No MCP servers found during auto-discovery');
-      console.error('[Bridge] Please start a VS Code instance with the LSP MCP extension');
+    } else {
+      console.error('[Bridge] ❌ No MCP servers found for the specified workspace');
+      if (workspacePath) {
+        console.error(`[Bridge] Expected workspace: ${workspacePath}`);
+      }
+      console.error('[Bridge] Please start a VS Code instance with the LSP MCP extension for this workspace');
       process.exit(1);
     }
+  } else {
+    // 如果没有指定工作区路径且未启用自动发现，拒绝连接
+    console.error('[Bridge] ❌ No workspace path specified');
+    console.error('[Bridge] To prevent cross-workspace connections, a workspace path must be provided');
+    console.error('[Bridge] Use --workspace PATH or --auto-discover option');
+    process.exit(1);
   }
   
   console.error(`[Bridge] Starting MCP stdio bridge...`);
