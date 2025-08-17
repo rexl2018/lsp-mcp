@@ -87,6 +87,8 @@ temp/
 
 # Editor directories and files
 .vscode/extensions.json
+.vscode/mcp_server.json
+.vscode/mcp-server.json
 .idea
 *.swp
 *.swo

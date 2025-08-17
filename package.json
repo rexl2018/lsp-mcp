@@ -38,32 +38,32 @@
   "contributes": {
     "commands": [
       {
-        "command": "vscode-mcp.startServer",
-        "title": "Start MCP Server"
+        "command": "lsp-mcp.startServer",
+        "title": "Start LSP MCP Server"
       },
       {
-        "command": "vscode-mcp.stopServer",
-        "title": "Stop MCP Server"
+        "command": "lsp-mcp.stopServer",
+        "title": "Stop LSP MCP Server"
       },
       {
-        "command": "vscode-mcp.toggleServer",
-        "title": "Toggle MCP Server"
+        "command": "lsp-mcp.toggleServer",
+        "title": "Toggle LSP MCP Server"
       }
     ],
     "configuration": {
       "title": "LSP MCP Server",
       "properties": {
 
-        "vscode-mcp.ssePort": {
+        "lsp-mcp.ssePort": {
           "type": "number",
           "default": 8008,
-          "description": "Port for the SSE direct connection server"
+          "description": "Port for the LSP MCP SSE direct connection server"
         },
 
-        "vscode-mcp.autoStart": {
+        "lsp-mcp.autoStart": {
           "type": "boolean",
           "default": false,
-          "description": "Automatically start MCP server when extension activates"
+          "description": "Automatically start LSP MCP server when extension activates"
         }
       }
     }
