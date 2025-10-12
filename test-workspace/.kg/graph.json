@@ -1,0 +1,1224 @@
+{
+  "nodes": [
+    {
+      "id": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "type": "File",
+      "name": "app.ts",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "createTime": 1760272978316,
+      "updateTime": 1760272978316
+    },
+    {
+      "id": "Function:src/app.ts#calculateSum",
+      "type": "Function",
+      "name": "calculateSum",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 3,
+          "character": 0
+        },
+        "end": {
+          "line": 5,
+          "character": 1
+        }
+      },
+      "detail": "Function",
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "id": "Function:src/app.ts#calculateSum#numbers.reduce() callback",
+      "type": "Function",
+      "name": "numbers.reduce() callback",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 4,
+          "character": 24
+        },
+        "end": {
+          "line": 4,
+          "character": 51
+        }
+      },
+      "detail": "Function",
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "id": "Function:src/app.ts#performCalculations",
+      "type": "Function",
+      "name": "performCalculations",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 8,
+          "character": 0
+        },
+        "end": {
+          "line": 18,
+          "character": 1
+        }
+      },
+      "detail": "Function",
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "id": "Variable:src/app.ts#performCalculations#calc",
+      "type": "Variable",
+      "name": "calc",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 9,
+          "character": 8
+        },
+        "end": {
+          "line": 9,
+          "character": 31
+        }
+      },
+      "detail": "Variable",
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "id": "Variable:src/app.ts#performCalculations#result",
+      "type": "Variable",
+      "name": "result",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 13,
+          "character": 8
+        },
+        "end": {
+          "line": 13,
+          "character": 33
+        }
+      },
+      "detail": "Variable",
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "id": "Function:src/app.ts#hasTypeError",
+      "type": "Function",
+      "name": "hasTypeError",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 21,
+          "character": 0
+        },
+        "end": {
+          "line": 24,
+          "character": 1
+        }
+      },
+      "detail": "Function",
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "id": "Variable:src/app.ts#hasTypeError#num",
+      "type": "Variable",
+      "name": "num",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 22,
+          "character": 8
+        },
+        "end": {
+          "line": 22,
+          "character": 36
+        }
+      },
+      "detail": "Variable",
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "id": "Variable:src/app.ts#unusedVariable",
+      "type": "Variable",
+      "name": "unusedVariable",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 27,
+          "character": 6
+        },
+        "end": {
+          "line": 27,
+          "character": 25
+        }
+      },
+      "detail": "Variable",
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "id": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "type": "File",
+      "name": "math.ts",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "id": "Function:src/math.ts#add",
+      "type": "Function",
+      "name": "add",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 6,
+          "character": 0
+        },
+        "end": {
+          "line": 8,
+          "character": 1
+        }
+      },
+      "detail": "Function",
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "id": "Function:src/math.ts#multiply",
+      "type": "Function",
+      "name": "multiply",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 16,
+          "character": 0
+        },
+        "end": {
+          "line": 18,
+          "character": 1
+        }
+      },
+      "detail": "Function",
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "id": "Class:src/math.ts#Calculator",
+      "type": "Class",
+      "name": "Calculator",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 20,
+          "character": 0
+        },
+        "end": {
+          "line": 44,
+          "character": 1
+        }
+      },
+      "detail": "Class",
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "id": "Method:src/math.ts#Calculator#add",
+      "type": "Method",
+      "name": "add",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 26,
+          "character": 2
+        },
+        "end": {
+          "line": 29,
+          "character": 3
+        }
+      },
+      "detail": "Method",
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "id": "Method:src/math.ts#Calculator#getResult",
+      "type": "Method",
+      "name": "getResult",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 34,
+          "character": 2
+        },
+        "end": {
+          "line": 36,
+          "character": 3
+        }
+      },
+      "detail": "Method",
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "id": "Method:src/math.ts#Calculator#reset",
+      "type": "Method",
+      "name": "reset",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 41,
+          "character": 2
+        },
+        "end": {
+          "line": 43,
+          "character": 3
+        }
+      },
+      "detail": "Method",
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    }
+  ],
+  "edges": [
+    {
+      "type": "DEFINES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "to": "Function:src/app.ts#calculateSum",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 3,
+          "character": 0
+        },
+        "end": {
+          "line": 5,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "DEFINES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "to": "Function:src/app.ts#calculateSum#numbers.reduce() callback",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 4,
+          "character": 24
+        },
+        "end": {
+          "line": 4,
+          "character": 51
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "CONTAINS",
+      "from": "Function:src/app.ts#calculateSum",
+      "to": "Function:src/app.ts#calculateSum#numbers.reduce() callback",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 4,
+          "character": 24
+        },
+        "end": {
+          "line": 4,
+          "character": 51
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "DEFINES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "to": "Function:src/app.ts#performCalculations",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 8,
+          "character": 0
+        },
+        "end": {
+          "line": 18,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "DEFINES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "to": "Variable:src/app.ts#performCalculations#calc",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 9,
+          "character": 8
+        },
+        "end": {
+          "line": 9,
+          "character": 31
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "CONTAINS",
+      "from": "Function:src/app.ts#performCalculations",
+      "to": "Variable:src/app.ts#performCalculations#calc",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 9,
+          "character": 8
+        },
+        "end": {
+          "line": 9,
+          "character": 31
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "DEFINES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "to": "Variable:src/app.ts#performCalculations#result",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 13,
+          "character": 8
+        },
+        "end": {
+          "line": 13,
+          "character": 33
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "CONTAINS",
+      "from": "Function:src/app.ts#performCalculations",
+      "to": "Variable:src/app.ts#performCalculations#result",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 13,
+          "character": 8
+        },
+        "end": {
+          "line": 13,
+          "character": 33
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "DEFINES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "to": "Function:src/app.ts#hasTypeError",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 21,
+          "character": 0
+        },
+        "end": {
+          "line": 24,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "DEFINES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "to": "Variable:src/app.ts#hasTypeError#num",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 22,
+          "character": 8
+        },
+        "end": {
+          "line": 22,
+          "character": 36
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "CONTAINS",
+      "from": "Function:src/app.ts#hasTypeError",
+      "to": "Variable:src/app.ts#hasTypeError#num",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 22,
+          "character": 8
+        },
+        "end": {
+          "line": 22,
+          "character": 36
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "DEFINES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "to": "Variable:src/app.ts#unusedVariable",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 27,
+          "character": 6
+        },
+        "end": {
+          "line": 27,
+          "character": 25
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "DEFINES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "to": "Function:src/math.ts#add",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 6,
+          "character": 0
+        },
+        "end": {
+          "line": 8,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "DEFINES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "to": "Function:src/math.ts#multiply",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 16,
+          "character": 0
+        },
+        "end": {
+          "line": 18,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "DEFINES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "to": "Class:src/math.ts#Calculator",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 20,
+          "character": 0
+        },
+        "end": {
+          "line": 44,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "DEFINES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "to": "Method:src/math.ts#Calculator#add",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 26,
+          "character": 2
+        },
+        "end": {
+          "line": 29,
+          "character": 3
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "CONTAINS",
+      "from": "Class:src/math.ts#Calculator",
+      "to": "Method:src/math.ts#Calculator#add",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 26,
+          "character": 2
+        },
+        "end": {
+          "line": 29,
+          "character": 3
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "DEFINES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "to": "Method:src/math.ts#Calculator#getResult",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 34,
+          "character": 2
+        },
+        "end": {
+          "line": 36,
+          "character": 3
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "CONTAINS",
+      "from": "Class:src/math.ts#Calculator",
+      "to": "Method:src/math.ts#Calculator#getResult",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 34,
+          "character": 2
+        },
+        "end": {
+          "line": 36,
+          "character": 3
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "DEFINES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "to": "Method:src/math.ts#Calculator#reset",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 41,
+          "character": 2
+        },
+        "end": {
+          "line": 43,
+          "character": 3
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "CONTAINS",
+      "from": "Class:src/math.ts#Calculator",
+      "to": "Method:src/math.ts#Calculator#reset",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 41,
+          "character": 2
+        },
+        "end": {
+          "line": 43,
+          "character": 3
+        }
+      },
+      "createTime": 1760272978317,
+      "updateTime": 1760272978317
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Function:src/app.ts#calculateSum",
+      "to": "Function:src/app.ts#calculateSum",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 3,
+          "character": 0
+        },
+        "end": {
+          "line": 5,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978322,
+      "updateTime": 1760272978322
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Function:src/app.ts#performCalculations",
+      "to": "Function:src/app.ts#performCalculations",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 8,
+          "character": 0
+        },
+        "end": {
+          "line": 18,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978323,
+      "updateTime": 1760272978323
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Variable:src/app.ts#performCalculations#calc",
+      "to": "Function:src/app.ts#performCalculations",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 9,
+          "character": 8
+        },
+        "end": {
+          "line": 9,
+          "character": 31
+        }
+      },
+      "createTime": 1760272978323,
+      "updateTime": 1760272978323
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Variable:src/app.ts#performCalculations#result",
+      "to": "Function:src/app.ts#performCalculations",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 13,
+          "character": 8
+        },
+        "end": {
+          "line": 13,
+          "character": 33
+        }
+      },
+      "createTime": 1760272978323,
+      "updateTime": 1760272978323
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Function:src/app.ts#hasTypeError",
+      "to": "Function:src/app.ts#hasTypeError",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 21,
+          "character": 0
+        },
+        "end": {
+          "line": 24,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978324,
+      "updateTime": 1760272978324
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Variable:src/app.ts#hasTypeError#num",
+      "to": "Function:src/app.ts#hasTypeError",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 22,
+          "character": 8
+        },
+        "end": {
+          "line": 22,
+          "character": 36
+        }
+      },
+      "createTime": 1760272978324,
+      "updateTime": 1760272978324
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Variable:src/app.ts#unusedVariable",
+      "to": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 27,
+          "character": 6
+        },
+        "end": {
+          "line": 27,
+          "character": 25
+        }
+      },
+      "createTime": 1760272978324,
+      "updateTime": 1760272978324
+    },
+    {
+      "type": "REFERENCES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "to": "Function:src/app.ts#calculateSum",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 3,
+          "character": 0
+        },
+        "end": {
+          "line": 5,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978331,
+      "updateTime": 1760272978331
+    },
+    {
+      "type": "REFERENCES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "to": "Function:src/app.ts#performCalculations",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 8,
+          "character": 0
+        },
+        "end": {
+          "line": 18,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978332,
+      "updateTime": 1760272978332
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Variable:src/app.ts#performCalculations#calc",
+      "to": "Variable:src/app.ts#performCalculations#calc",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 9,
+          "character": 8
+        },
+        "end": {
+          "line": 9,
+          "character": 31
+        }
+      },
+      "createTime": 1760272978336,
+      "updateTime": 1760272978336
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Function:src/app.ts#performCalculations",
+      "to": "Variable:src/app.ts#performCalculations#calc",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 9,
+          "character": 8
+        },
+        "end": {
+          "line": 9,
+          "character": 31
+        }
+      },
+      "createTime": 1760272978336,
+      "updateTime": 1760272978336
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Variable:src/app.ts#performCalculations#result",
+      "to": "Variable:src/app.ts#performCalculations#calc",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 9,
+          "character": 8
+        },
+        "end": {
+          "line": 9,
+          "character": 31
+        }
+      },
+      "createTime": 1760272978336,
+      "updateTime": 1760272978336
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Variable:src/app.ts#performCalculations#result",
+      "to": "Variable:src/app.ts#performCalculations#result",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 13,
+          "character": 8
+        },
+        "end": {
+          "line": 13,
+          "character": 33
+        }
+      },
+      "createTime": 1760272978338,
+      "updateTime": 1760272978338
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Function:src/app.ts#performCalculations",
+      "to": "Variable:src/app.ts#performCalculations#result",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 13,
+          "character": 8
+        },
+        "end": {
+          "line": 13,
+          "character": 33
+        }
+      },
+      "createTime": 1760272978338,
+      "updateTime": 1760272978338
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Variable:src/app.ts#hasTypeError#num",
+      "to": "Variable:src/app.ts#hasTypeError#num",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 22,
+          "character": 8
+        },
+        "end": {
+          "line": 22,
+          "character": 36
+        }
+      },
+      "createTime": 1760272978340,
+      "updateTime": 1760272978340
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Function:src/app.ts#hasTypeError",
+      "to": "Variable:src/app.ts#hasTypeError#num",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 22,
+          "character": 8
+        },
+        "end": {
+          "line": 22,
+          "character": 36
+        }
+      },
+      "createTime": 1760272978340,
+      "updateTime": 1760272978340
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Variable:src/app.ts#unusedVariable",
+      "to": "Variable:src/app.ts#unusedVariable",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "range": {
+        "start": {
+          "line": 27,
+          "character": 6
+        },
+        "end": {
+          "line": 27,
+          "character": 25
+        }
+      },
+      "createTime": 1760272978341,
+      "updateTime": 1760272978341
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Function:src/math.ts#add",
+      "to": "Function:src/math.ts#add",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 6,
+          "character": 0
+        },
+        "end": {
+          "line": 8,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978341,
+      "updateTime": 1760272978341
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Function:src/math.ts#multiply",
+      "to": "Function:src/math.ts#multiply",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 16,
+          "character": 0
+        },
+        "end": {
+          "line": 18,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978341,
+      "updateTime": 1760272978341
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Class:src/math.ts#Calculator",
+      "to": "Class:src/math.ts#Calculator",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 20,
+          "character": 0
+        },
+        "end": {
+          "line": 44,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978342,
+      "updateTime": 1760272978342
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Method:src/math.ts#Calculator#add",
+      "to": "Method:src/math.ts#Calculator#add",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 26,
+          "character": 2
+        },
+        "end": {
+          "line": 29,
+          "character": 3
+        }
+      },
+      "createTime": 1760272978343,
+      "updateTime": 1760272978343
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Method:src/math.ts#Calculator#getResult",
+      "to": "Method:src/math.ts#Calculator#getResult",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 34,
+          "character": 2
+        },
+        "end": {
+          "line": 36,
+          "character": 3
+        }
+      },
+      "createTime": 1760272978343,
+      "updateTime": 1760272978343
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Method:src/math.ts#Calculator#reset",
+      "to": "Method:src/math.ts#Calculator#reset",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 41,
+          "character": 2
+        },
+        "end": {
+          "line": 43,
+          "character": 3
+        }
+      },
+      "createTime": 1760272978343,
+      "updateTime": 1760272978343
+    },
+    {
+      "type": "REFERENCES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "to": "Function:src/math.ts#add",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 6,
+          "character": 0
+        },
+        "end": {
+          "line": 8,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978347,
+      "updateTime": 1760272978347
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Function:src/app.ts#calculateSum#numbers.reduce() callback",
+      "to": "Function:src/math.ts#add",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 6,
+          "character": 0
+        },
+        "end": {
+          "line": 8,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978347,
+      "updateTime": 1760272978347
+    },
+    {
+      "type": "REFERENCES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "to": "Function:src/math.ts#multiply",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 16,
+          "character": 0
+        },
+        "end": {
+          "line": 18,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978348,
+      "updateTime": 1760272978348
+    },
+    {
+      "type": "REFERENCES",
+      "from": "file:///Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/app.ts",
+      "to": "Class:src/math.ts#Calculator",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 20,
+          "character": 0
+        },
+        "end": {
+          "line": 44,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978349,
+      "updateTime": 1760272978349
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Variable:src/app.ts#performCalculations#calc",
+      "to": "Class:src/math.ts#Calculator",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 20,
+          "character": 0
+        },
+        "end": {
+          "line": 44,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978349,
+      "updateTime": 1760272978349
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Method:src/math.ts#Calculator#add",
+      "to": "Class:src/math.ts#Calculator",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 20,
+          "character": 0
+        },
+        "end": {
+          "line": 44,
+          "character": 1
+        }
+      },
+      "createTime": 1760272978349,
+      "updateTime": 1760272978349
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Function:src/app.ts#performCalculations",
+      "to": "Method:src/math.ts#Calculator#add",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 26,
+          "character": 2
+        },
+        "end": {
+          "line": 29,
+          "character": 3
+        }
+      },
+      "createTime": 1760272978362,
+      "updateTime": 1760272978362
+    },
+    {
+      "type": "REFERENCES",
+      "from": "Variable:src/app.ts#performCalculations#result",
+      "to": "Method:src/math.ts#Calculator#getResult",
+      "filePath": "/Users/bytedance/work/tools/git/lsp-mcp/test-workspace/src/math.ts",
+      "range": {
+        "start": {
+          "line": 34,
+          "character": 2
+        },
+        "end": {
+          "line": 36,
+          "character": 3
+        }
+      },
+      "createTime": 1760272978363,
+      "updateTime": 1760272978363
+    }
+  ]
+}

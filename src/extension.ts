@@ -3,9 +3,15 @@ import { SSEServer, SSEServerConfig } from './mcp/sse-server';
 import { debugOutputTracker } from './services/debugOutputTracker';
 import { outputChannelService } from './services/outputChannelService';
 import { workspacePortManager } from './utils/workspace-port-manager';
+import { GraphBuilder } from './kg/core/graph';
+import { DocumentSymbolCrawler } from './kg/crawlers/document-symbol-crawler';
+import { saveGraph } from './kg/core/serializer';
+import { DefinitionAndReferencesCrawler } from './kg/crawlers/def-and-ref-crawler';
 
 let sseServer: SSEServer | undefined;
 let mcpServerStatusBar: vscode.StatusBarItem | undefined;
+let kgGraph: GraphBuilder | undefined;
+let kgScanCancellation: vscode.CancellationTokenSource | undefined;
 
 async function updateMcpServerStatusBar() {
   if (!mcpServerStatusBar) {
@@ -124,11 +130,58 @@ export async function activate(context: vscode.ExtensionContext) {
   await updateMcpServerStatusBar();
   mcpServerStatusBar.show();
 
+  const generateGraphCommand = vscode.commands.registerCommand('kg.generateGraph', async () => {
+    kgScanCancellation = new vscode.CancellationTokenSource();
+    const token = kgScanCancellation.token;
+    await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: 'Generating Knowledge Graph', cancellable: true }, async (progress, cancelToken) => {
+      cancelToken.onCancellationRequested(() => kgScanCancellation?.cancel());
+      progress.report({ message: 'Scanning workspace files...' });
+      const builder = new GraphBuilder();
+      const docCrawler = new DocumentSymbolCrawler();
+      // DocumentSymbolCrawler will respect kg.excludeTests (default true)
+      await docCrawler.crawl(builder, token);
+      progress.report({ message: 'Resolving definitions and references...' });
+      const refCrawler = new DefinitionAndReferencesCrawler(8);
+      // def-and-ref crawler iterates existing nodes, so filtered test files won't be included
+      await refCrawler.crawl(builder, token);
+      kgGraph = builder;
+      progress.report({ message: 'Saving graph to .kg/graph.json...' });
+      const uri = await saveGraph(builder);
+      if (uri) {
+        vscode.window.showInformationMessage(`Knowledge graph saved: ${uri.fsPath}`);
+      } else {
+        vscode.window.showWarningMessage('No workspace folder found. Graph not saved.');
+      }
+    });
+  });
+
+  const exportGraphCommand = vscode.commands.registerCommand('kg.exportGraph', async () => {
+    if (!kgGraph) {
+      vscode.window.showInformationMessage('No graph in memory. Generating a fresh graph...');
+      await vscode.commands.executeCommand('kg.generateGraph');
+      return;
+    }
+    const uri = await saveGraph(kgGraph);
+    if (uri) {
+      vscode.window.showInformationMessage(`Knowledge graph exported: ${uri.fsPath}`);
+    }
+  });
+
+  const stopScanCommand = vscode.commands.registerCommand('kg.stopScan', async () => {
+    if (kgScanCancellation && !kgScanCancellation.token.isCancellationRequested) {
+      kgScanCancellation.cancel();
+      vscode.window.showInformationMessage('Knowledge graph scan cancelled.');
+    }
+  });
+
   context.subscriptions.push(
     startServerCommand,
     stopServerCommand,
     toggleServerCommand,
-    mcpServerStatusBar
+    mcpServerStatusBar,
+    generateGraphCommand,
+    exportGraphCommand,
+    stopScanCommand
   );
 
   // Auto-start server on activation

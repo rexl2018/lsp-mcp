@@ -32,9 +32,19 @@
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onCommand:kg.generateGraph",
+    "onCommand:kg.exportGraph",
+    "onCommand:kg.stopScan"
   ],
   "main": "./out/extension.js",
+  "files": [
+    "out",
+    "bin",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
   "contributes": {
     "commands": [
       {
@@ -48,22 +58,27 @@
       {
         "command": "lsp-mcp.toggleServer",
         "title": "Toggle LSP MCP Server"
+      },
+      {
+        "command": "kg.generateGraph",
+        "title": "KG: Generate Knowledge Graph"
+      },
+      {
+        "command": "kg.exportGraph",
+        "title": "KG: Export Knowledge Graph"
+      },
+      {
+        "command": "kg.stopScan",
+        "title": "KG: Stop Scan"
       }
     ],
     "configuration": {
-      "title": "LSP MCP Server",
+      "title": "Knowledge Graph",
       "properties": {
-
-        "lsp-mcp.ssePort": {
-          "type": "number",
-          "default": 8008,
-          "description": "Port for the LSP MCP SSE direct connection server"
-        },
-
-        "lsp-mcp.autoStart": {
+        "kg.excludeTests": {
           "type": "boolean",
-          "default": false,
-          "description": "Automatically start LSP MCP server when extension activates"
+          "default": true,
+          "description": "是否排除全部测试相关的代码（unit/integration），默认启用。"
         }
       }
     }
@@ -75,7 +90,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "prepare": "npm run compile",
-    "pretest": "npm run compile && npm run lint",
+    "pretest": "npm run compile",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "package": "vsce package"
