@@ -41,7 +41,7 @@ export const hierarchyTreeTool: Tool = {
       },
       symbolLocation: {
         type: 'object',
-        description: 'Optional location of the symbol (file path and 1-based line number), used to get more accurate results.',
+        description: 'Optional location of the symbol (file path, line number and column), used to get more accurate results.',
         properties: {
           filePath: {
             type: 'string',
@@ -50,9 +50,13 @@ export const hierarchyTreeTool: Tool = {
           line: {
             type: 'number',
             description: 'Line number (1-based) where the symbol is located'
+          },
+          column: {
+            type: 'number',
+            description: 'Column number (0-based) where the symbol is located'
           }
         },
-        required: ['filePath', 'line']
+         required: ['filePath', 'line', 'column']
       },
       includeDetails: {
         type: 'boolean',
@@ -179,10 +183,12 @@ function validateAndNormalizeOptions(args: any): HierarchyTreeOptions {
   // Add symbolLocation if provided
   if (args.symbolLocation && 
       typeof args.symbolLocation.filePath === 'string' && 
-      typeof args.symbolLocation.line === 'number') {
+      typeof args.symbolLocation.line === 'number' &&
+      typeof args.symbolLocation.column === 'number') {
     options.symbolLocation = {
       filePath: args.symbolLocation.filePath,
-      line: args.symbolLocation.line
+      line: args.symbolLocation.line,
+      column: args.symbolLocation.column
     };
   }
   
