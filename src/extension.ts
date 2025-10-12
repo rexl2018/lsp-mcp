@@ -145,9 +145,12 @@ export async function activate(context: vscode.ExtensionContext) {
       // def-and-ref crawler iterates existing nodes, so filtered test files won't be included
       await refCrawler.crawl(builder, token);
       kgGraph = builder;
-      progress.report({ message: 'Saving graph to .kg/graph.json...' });
+      const backend = vscode.workspace.getConfiguration('kg').get<'json' | 'neo4j'>('storageBackend', 'json');
+      progress.report({ message: backend === 'neo4j' ? 'Saving graph to Neo4j...' : 'Saving graph to .kg/graph.json...' });
       const uri = await saveGraph(builder);
-      if (uri) {
+      if (backend === 'neo4j') {
+        vscode.window.showInformationMessage('Knowledge graph saved to Neo4j.');
+      } else if (uri) {
         vscode.window.showInformationMessage(`Knowledge graph saved: ${uri.fsPath}`);
       } else {
         vscode.window.showWarningMessage('No workspace folder found. Graph not saved.');
@@ -161,8 +164,11 @@ export async function activate(context: vscode.ExtensionContext) {
       await vscode.commands.executeCommand('kg.generateGraph');
       return;
     }
+    const backend = vscode.workspace.getConfiguration('kg').get<'json' | 'neo4j'>('storageBackend', 'json');
     const uri = await saveGraph(kgGraph);
-    if (uri) {
+    if (backend === 'neo4j') {
+      vscode.window.showInformationMessage('Knowledge graph exported to Neo4j.');
+    } else if (uri) {
       vscode.window.showInformationMessage(`Knowledge graph exported: ${uri.fsPath}`);
     }
   });

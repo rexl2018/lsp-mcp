@@ -38,13 +38,7 @@
     "onCommand:kg.stopScan"
   ],
   "main": "./out/extension.js",
-  "files": [
-    "out",
-    "bin",
-    "README.md",
-    "LICENSE",
-    "package.json"
-  ],
+
   "contributes": {
     "commands": [
       {
@@ -79,6 +73,34 @@
           "type": "boolean",
           "default": true,
           "description": "是否排除全部测试相关的代码（unit/integration），默认启用。"
+        },
+
+        "kg.storageBackend": {
+          "type": "string",
+          "enum": ["json", "neo4j"],
+          "default": "json",
+          "description": "知识图存储后端：json（本地文件 .kg/graph.json）或 neo4j（本地 Neo4j 数据库）"
+        },
+
+        "kg.neo4j.url": {
+          "type": "string",
+          "default": "bolt://localhost:7687",
+          "description": "Neo4j Bolt URL（通常为本地实例：bolt://localhost:7687）"
+        },
+        "kg.neo4j.username": {
+          "type": "string",
+          "default": "neo4j",
+          "description": "Neo4j 用户名"
+        },
+        "kg.neo4j.password": {
+          "type": "string",
+          "default": "",
+          "description": "Neo4j 密码（建议通过 VS Code 用户设置写入，本地开发环境使用）"
+        },
+        "kg.neo4j.database": {
+          "type": "string",
+          "default": "neo4j",
+          "description": "Neo4j 数据库名称"
         }
       }
     }
@@ -114,6 +136,7 @@
     "@types/express": "^5.0.3",
     "cors": "^2.8.5",
     "eventsource": "^2.0.2",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "neo4j-driver": "^5.18.0"
   }
 }

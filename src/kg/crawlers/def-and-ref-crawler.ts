@@ -17,8 +17,31 @@ function isTestFileOrPath(fsPath: string): boolean {
     '/src/test/', '\\src\\test\\'
   ];
   if (dirHints.some(h => p.includes(h))) return true;
-  if (/\.(test|spec)\.(ts|tsx|js|jsx)$/.test(name)) return true;
+  if (/(\.test|\.spec)\.(ts|tsx|js|jsx)$/.test(name)) return true;
   return false;
+}
+
+// Resolve a workspace-relative path (e.g., "<workspaceFolderName>/src/file.ts") into an absolute URI
+function toAbsoluteUri(workspaceRelativePath: string): vscode.Uri {
+  const rel = workspaceRelativePath.replace(/\\/g, '/');
+  // If already absolute (Unix or Windows), use as-is
+  if (/^\//.test(rel) || /^[a-zA-Z]:[\\/]/.test(workspaceRelativePath)) {
+    return vscode.Uri.file(workspaceRelativePath);
+  }
+  const segments = rel.split('/').filter(Boolean);
+  const folders = vscode.workspace.workspaceFolders;
+  if (folders && folders.length > 0) {
+    // If the first segment matches a workspace folder name, join the rest under that folder
+    const folder = folders.find(f => f.name === segments[0]);
+    if (folder && segments.length > 1) {
+      return vscode.Uri.joinPath(folder.uri, ...segments.slice(1));
+    }
+    // Otherwise, join all segments under the first workspace folder
+    const first = folders[0];
+    return vscode.Uri.joinPath(first.uri, ...segments);
+  }
+  // Fallback
+  return vscode.Uri.file(workspaceRelativePath);
 }
 
 export class DefinitionAndReferencesCrawler {
@@ -62,9 +85,75 @@ export class DefinitionAndReferencesCrawler {
     if (!node.filePath || !node.range) return;
     if (token?.isCancellationRequested) return;
 
-    const absUri = vscode.Uri.file(node.filePath);
+    const absUri = toAbsoluteUri(node.filePath);
     const relPath = vscode.workspace.asRelativePath(absUri, true);
-    const pos = new vscode.Position(node.range.start.line, node.range.start.character);
+    // Use the symbol name position within the declaration range to improve provider accuracy
+    let pos = new vscode.Position(node.range.start.line, node.range.start.character);
+    try {
+      const doc = await vscode.workspace.openTextDocument(absUri);
+      const startLine = node.range.start.line;
+      const endLine = node.range.end.line;
+      for (let line = startLine; line <= endLine; line++) {
+        const text = doc.lineAt(line).text;
+        const idx = text.indexOf(node.name);
+        if (idx >= 0) {
+          pos = new vscode.Position(line, idx);
+          break;
+        }
+      }
+    } catch (e) {
+      // Fallback to start-of-range when document cannot be opened
+    }
+
+    // Scan for potential function/method invocations within the function body and add outgoing REFERENCES edges
+    try {
+      const doc = await vscode.workspace.openTextDocument(absUri);
+      const startLine = node.range.start.line;
+      const endLine = node.range.end.line;
+      let matchCount = 0;
+      for (let line = startLine; line <= endLine && matchCount < 200; line++) {
+        const text = doc.lineAt(line).text;
+        const regex = /\b([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)?)\s*\(/g;
+        let m: RegExpExecArray | null;
+        while ((m = regex.exec(text)) && matchCount < 200) {
+          const full = m[1];
+          const dotIdx = full.lastIndexOf('.');
+          const char = m.index + (dotIdx >= 0 ? dotIdx + 1 : 0);
+          const callPos = new vscode.Position(line, char);
+          // Skip the function's own declaration occurrence to avoid self-references
+          if ((full === node.name || full.endsWith('.' + node.name)) && line === pos.line) {
+            continue;
+          }
+          const defs2 = await vscode.commands.executeCommand<vscode.Location[] | vscode.LocationLink[]>(
+            'vscode.executeDefinitionProvider', absUri, callPos
+          );
+          const locs2: vscode.Location[] = Array.isArray(defs2)
+            ? defs2.map(d => ('range' in d ? d : new vscode.Location(d.targetUri, d.targetRange)))
+            : [];
+          for (const def of locs2) {
+            const targetRelPath = vscode.workspace.asRelativePath(def.uri, true);
+            const targetRange: Range = {
+              start: { line: def.range.start.line, character: def.range.start.character },
+              end: { line: def.range.end.line, character: def.range.end.character }
+            };
+            const targetId = this.resolveNodeIdForLocation(graph, targetRelPath, targetRange);
+            if (!targetId || targetId === node.id) continue;
+            graph.addEdge({
+              type: 'REFERENCES',
+              from: node.id,
+              to: targetId,
+              filePath: relPath,
+              range: node.range,
+              createTime: Date.now(),
+              updateTime: Date.now()
+            });
+          }
+          matchCount++;
+        }
+      }
+    } catch (e) {
+      // ignore scanning errors
+    }
 
     // Definitions
     const defs = await vscode.commands.executeCommand<vscode.Location[] | vscode.LocationLink[]>(
@@ -82,7 +171,7 @@ export class DefinitionAndReferencesCrawler {
         end: { line: def.range.end.line, character: def.range.end.character }
       };
       const targetId = this.resolveNodeIdForLocation(graph, targetRelPath, targetRange);
-      if (!targetId) continue;
+      if (!targetId || targetId === node.id) continue;
       graph.addEdge({
         type: 'REFERENCES',
         from: node.id,
@@ -110,7 +199,7 @@ export class DefinitionAndReferencesCrawler {
         end: { line: ref.range.end.line, character: ref.range.end.character }
       };
       const sourceId = this.resolveNodeIdForLocation(graph, sourceRelPath, sourceRange);
-      if (!sourceId) continue;
+      if (!sourceId || sourceId === node.id) continue;
       graph.addEdge({
         type: 'REFERENCES',
         from: sourceId,

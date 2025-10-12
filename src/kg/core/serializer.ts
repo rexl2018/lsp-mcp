@@ -1,16 +1,18 @@
 import * as vscode from 'vscode';
 import { GraphBuilder } from './graph';
-import { GraphJSON } from './types';
+import { GraphJSON, Node as KGNode, Edge as KGEdge } from './types';
+
+// Minimal transaction interface to avoid hard dependency on neo4j types
+interface Neo4jTransaction {
+  run: (query: string, params?: any) => Promise<any>;
+}
 
 function getWorkspaceFolder(): vscode.WorkspaceFolder | undefined {
   const folders = vscode.workspace.workspaceFolders;
   return folders && folders.length > 0 ? folders[0] : undefined;
 }
 
-export async function saveGraph(
-  graph: GraphBuilder,
-  workspaceFolder?: vscode.WorkspaceFolder
-): Promise<vscode.Uri | undefined> {
+async function saveGraphToJson(graph: GraphBuilder, workspaceFolder?: vscode.WorkspaceFolder): Promise<vscode.Uri | undefined> {
   const folder = workspaceFolder || getWorkspaceFolder();
   if (!folder) return undefined;
 
@@ -30,6 +32,87 @@ export async function saveGraph(
   return kgFile;
 }
 
+async function saveGraphToNeo4j(graph: GraphBuilder): Promise<void> {
+  const kgConfig = vscode.workspace.getConfiguration('kg');
+  const url = kgConfig.get<string>('neo4j.url', 'bolt://localhost:7687');
+  const username = kgConfig.get<string>('neo4j.username', 'neo4j');
+  const password = kgConfig.get<string>('neo4j.password', '');
+  const database = kgConfig.get<string>('neo4j.database', 'neo4j');
+
+  if (!password) {
+    vscode.window.showWarningMessage('KG: Neo4j password is empty. Set kg.neo4j.password in settings.');
+  }
+
+  const neo4j = (await import('neo4j-driver')).default;
+  const driver = neo4j.driver(url, neo4j.auth.basic(username, password));
+  const session = driver.session({ database });
+
+  try {
+    await session.writeTransaction(async (tx: Neo4jTransaction) => {
+      const nodes = graph.nodes();
+      for (const n of nodes) {
+        const props: Record<string, unknown> = {
+          id: n.id,
+          type: n.type,
+          name: n.name,
+          filePath: n.filePath,
+          range: n.range ? JSON.stringify(n.range) : undefined,
+          detail: n.detail,
+          description: n.description,
+          tags: n.tags,
+          createTime: n.createTime,
+          updateTime: n.updateTime,
+        };
+        await tx.run(
+          `MERGE (n:KGNode {id: $id})\nSET n += $props`,
+          { id: n.id, props }
+        );
+      }
+
+      const edges = graph.edges();
+      for (const e of edges) {
+        const relType = e.type;
+        const props: Record<string, unknown> = {
+          filePath: e.filePath,
+          range: e.range ? JSON.stringify(e.range) : undefined,
+          description: e.description,
+          tags: e.tags,
+          createTime: e.createTime,
+          updateTime: e.updateTime,
+        };
+        const cypher = `MATCH (a:KGNode {id: $fromId}), (b:KGNode {id: $toId})\nMERGE (a)-[r:${relType}]->(b)\nSET r += $props`;
+        await tx.run(cypher, { fromId: e.from, toId: e.to, props });
+      }
+    });
+  } finally {
+    await session.close();
+    await driver.close();
+  }
+}
+
+export async function saveGraph(
+  graph: GraphBuilder,
+  workspaceFolder?: vscode.WorkspaceFolder
+): Promise<vscode.Uri | undefined> {
+  const kgConfig = vscode.workspace.getConfiguration('kg');
+  const backend = kgConfig.get<'json' | 'neo4j'>('storageBackend', 'json');
+
+  if (backend === 'neo4j') {
+    try {
+      await saveGraphToNeo4j(graph);
+      // Returning undefined for Neo4j backend (no file URI)
+      return undefined;
+    } catch (error) {
+      vscode.window.showErrorMessage(`KG: Failed to save graph to Neo4j: ${error}`);
+      // Do not silently fall back; respect configured backend
+      return undefined;
+    }
+  }
+
+  // Default to JSON file storage
+  return await saveGraphToJson(graph, workspaceFolder);
+}
+
 export async function loadGraph(
   workspaceFolder?: vscode.WorkspaceFolder
 ): Promise<GraphBuilder | undefined> {
@@ -40,8 +123,8 @@ export async function loadGraph(
     const buf = await vscode.workspace.fs.readFile(kgFile);
     const json = JSON.parse(Buffer.from(buf).toString('utf8')) as GraphJSON;
     const builder = new GraphBuilder();
-    for (const n of json.nodes) builder.addNode(n);
-    for (const e of json.edges) builder.addEdge(e);
+    for (const n of json.nodes) builder.addNode(n as KGNode);
+    for (const e of json.edges) builder.addEdge(e as KGEdge);
     return builder;
   } catch {
     return undefined;
