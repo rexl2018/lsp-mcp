@@ -63,7 +63,7 @@ export class DefinitionAndReferencesCrawler {
     return afterStart && beforeEnd;
   }
 
-  private resolveNodeIdForLocation(graph: GraphBuilder, filePath: string, locRange: Range): string | null {
+  private async resolveNodeIdForLocation(graph: GraphBuilder, filePath: string, locRange: Range): Promise<string | null> {
     const kgConfig = vscode.workspace.getConfiguration('kg');
     const excludeTests = kgConfig.get<boolean>('excludeTests', true);
     if (excludeTests && isTestFileOrPath(filePath)) {
@@ -78,7 +78,7 @@ export class DefinitionAndReferencesCrawler {
       });
       return best.id;
     }
-    return normalizeFileId(filePath);
+    return await normalizeFileId(filePath);
   }
 
   private async processNode(graph: GraphBuilder, node: Node, token?: vscode.CancellationToken): Promise<void> {
@@ -136,7 +136,7 @@ export class DefinitionAndReferencesCrawler {
               start: { line: def.range.start.line, character: def.range.start.character },
               end: { line: def.range.end.line, character: def.range.end.character }
             };
-            const targetId = this.resolveNodeIdForLocation(graph, targetRelPath, targetRange);
+            const targetId = await this.resolveNodeIdForLocation(graph, targetRelPath, targetRange);
             if (!targetId || targetId === node.id) continue;
             graph.addEdge({
               type: 'REFERENCES',
@@ -170,7 +170,7 @@ export class DefinitionAndReferencesCrawler {
         start: { line: def.range.start.line, character: def.range.start.character },
         end: { line: def.range.end.line, character: def.range.end.character }
       };
-      const targetId = this.resolveNodeIdForLocation(graph, targetRelPath, targetRange);
+      const targetId = await this.resolveNodeIdForLocation(graph, targetRelPath, targetRange);
       if (!targetId || targetId === node.id) continue;
       graph.addEdge({
         type: 'REFERENCES',
@@ -198,7 +198,7 @@ export class DefinitionAndReferencesCrawler {
         start: { line: ref.range.start.line, character: ref.range.start.character },
         end: { line: ref.range.end.line, character: ref.range.end.character }
       };
-      const sourceId = this.resolveNodeIdForLocation(graph, sourceRelPath, sourceRange);
+      const sourceId = await this.resolveNodeIdForLocation(graph, sourceRelPath, sourceRange);
       if (!sourceId || sourceId === node.id) continue;
       graph.addEdge({
         type: 'REFERENCES',

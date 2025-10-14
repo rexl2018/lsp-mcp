@@ -8,7 +8,13 @@ export type NodeType =
   | 'Enum'
   | 'Namespace'
   | 'Module'
-  | 'Package';
+  | 'Package'
+  | 'Type'
+  | 'Struct'
+  | 'Func'
+  | 'Map'
+  | 'Slice'
+  | 'Channel';
 
 export interface Position {
   line: number;

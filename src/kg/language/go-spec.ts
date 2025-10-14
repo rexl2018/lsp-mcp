@@ -8,7 +8,7 @@ export class GoSpec implements LanguageSpec {
       case vscode.SymbolKind.Package:
         return 'Package';
       case vscode.SymbolKind.Class:
-        return 'Class';
+        return 'Struct';
       case vscode.SymbolKind.Interface:
         return 'Interface';
       case vscode.SymbolKind.Method:
