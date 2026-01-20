@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { GraphBuilder } from './graph';
 import { GraphJSON, Node as KGNode, Edge as KGEdge } from './types';
+import { normalizePathForExportSync } from './id-normalizer';
 
 // GraphRAG format interfaces
 interface GraphRAGEntity {
@@ -50,8 +51,11 @@ function convertToGraphRAGFormat(graph: GraphBuilder): GraphRAGFormat {
     const description = node.name || '';
     
     // Build user_extra from all node fields except id
-    const nodeExtra = { ...node };
-    delete (nodeExtra as any).id;
+    const nodeExtra = { ...node } as any;
+    delete nodeExtra.id;
+    if (nodeExtra.filePath) {
+      nodeExtra.filePath = normalizePathForExportSync(nodeExtra.filePath);
+    }
     const user_extra = JSON.stringify(nodeExtra);
     
     return {
@@ -73,9 +77,12 @@ function convertToGraphRAGFormat(graph: GraphBuilder): GraphRAGFormat {
     const description = edge.type;
     
     // Build user_extra from all edge fields except from/to
-    const edgeExtra = { ...edge };
-    delete (edgeExtra as any).from;
-    delete (edgeExtra as any).to;
+    const edgeExtra = { ...edge } as any;
+    delete edgeExtra.from;
+    delete edgeExtra.to;
+    if (edgeExtra.filePath) {
+      edgeExtra.filePath = normalizePathForExportSync(edgeExtra.filePath);
+    }
     const user_extra = JSON.stringify(edgeExtra);
     
     return {

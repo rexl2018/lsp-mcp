@@ -5,6 +5,25 @@ import * as path from 'path';
 // Cache for Go module paths to avoid repeated file reads
 const goModulePathCache = new Map<string, string | null>();
 
+// Strip Go module version suffixes in GOPATH mod paths, e.g.
+// /go/pkg/mod/code.byted.org/gopkg/logs/v2@v2.1.58/default.go -> .../v2/default.go
+function stripGoModuleVersion(p: string): string {
+  return p.replace(/([\/\\])([^\/\\]*?)@[^\/\\]+(?=[\/\\])/g, '$1$2');
+}
+
+// Strip absolute prefixes for Go paths:
+// - Remove GOPATH mod absolute prefix: */go/pkg/mod/ -> keep module path after it
+// - Collapse any absolute GOROOT/GOPATH src prefix to //go/src/
+function stripGoAbsolutePrefixes(p: string): string {
+  // Case 1: GOPATH mod
+  const modMatch = p.match(/^.*?[\/\\]go[\/\\]pkg[\/\\]mod[\/\\](.+)$/);
+  if (modMatch) {
+    return modMatch[1];
+  }
+  // Case 2: GOROOT/GOPATH src -> //go/src/
+  return p.replace(/^.*?[\/\\]go[\/\\]src[\/\\]/, '//go/src/');
+}
+
 /**
  * Read go.mod file and extract module path
  */
@@ -40,7 +59,8 @@ async function getGoModulePath(workspaceFolder: vscode.WorkspaceFolder): Promise
 async function normalizeGoPath(filePath: string): Promise<string> {
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (!workspaceFolders) {
-    return filePath;
+    // Still normalize version suffixes and absolute prefixes even when no workspace folders
+    return stripGoAbsolutePrefixes(stripGoModuleVersion(filePath));
   }
 
   // Check if this contains a Go file path (either ends with .go or contains .go#)
@@ -56,12 +76,13 @@ async function normalizeGoPath(filePath: string): Promise<string> {
       if (modulePath) {
         // Replace the workspace folder name with the full module path
         const relativePath = filePath.substring(folderName.length + 1);
-        return `${modulePath}/${relativePath}`;
+        const normalized = `${modulePath}/${relativePath}`;
+        return stripGoAbsolutePrefixes(stripGoModuleVersion(normalized));
       }
     }
   }
 
-  return filePath;
+  return stripGoAbsolutePrefixes(stripGoModuleVersion(filePath));
 }
 
 export async function normalizeFileId(filePath: string): Promise<string> {
@@ -81,4 +102,9 @@ export function normalizeFileIdSync(filePath: string): string {
 
 export function makeSymbolIdSync(kind: string, qualifiedName: string): string {
   return `${kind}:${qualifiedName}`;
+}
+
+export function normalizePathForExportSync(filePath: string): string {
+  // Apply Go-specific normalization; non-matching paths will remain unchanged
+  return stripGoAbsolutePrefixes(stripGoModuleVersion(filePath));
 }

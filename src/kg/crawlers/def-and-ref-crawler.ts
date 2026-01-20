@@ -2,11 +2,11 @@ import * as vscode from 'vscode';
 import { GraphBuilder } from '../core/graph';
 import { Node, Range, Position } from '../core/types';
 import { RequestQueue } from '../batch/request-queue';
-import { normalizeFileId } from '../core/id-normalizer';
+import { normalizeFileId, makeSymbolId } from '../core/id-normalizer';
 
 function isTestFileOrPath(fsPath: string): boolean {
   const p = fsPath.toLowerCase();
-  const name = p.split(/[/\\]/).pop() || p;
+  const name = p.split(/[\/\\]/).pop() || p;
   const dirHints = [
     '/tests/', '\\tests\\',
     '/test/', '\\test\\',
@@ -63,7 +63,7 @@ export class DefinitionAndReferencesCrawler {
     return afterStart && beforeEnd;
   }
 
-  private async resolveNodeIdForLocation(graph: GraphBuilder, filePath: string, locRange: Range): Promise<string | null> {
+  private async resolveNodeIdForLocation(graph: GraphBuilder, filePath: string, locRange: Range, fallbackToFile: boolean = true): Promise<string | null> {
     const kgConfig = vscode.workspace.getConfiguration('kg');
     const excludeTests = kgConfig.get<boolean>('excludeTests', true);
     if (excludeTests && isTestFileOrPath(filePath)) {
@@ -78,7 +78,7 @@ export class DefinitionAndReferencesCrawler {
       });
       return best.id;
     }
-    return await normalizeFileId(filePath);
+    return fallbackToFile ? await normalizeFileId(filePath) : null;
   }
 
   private async processNode(graph: GraphBuilder, node: Node, token?: vscode.CancellationToken): Promise<void> {
@@ -136,7 +136,22 @@ export class DefinitionAndReferencesCrawler {
               start: { line: def.range.start.line, character: def.range.start.character },
               end: { line: def.range.end.line, character: def.range.end.character }
             };
-            const targetId = await this.resolveNodeIdForLocation(graph, targetRelPath, targetRange);
+            const symbolName = full.substring(dotIdx >= 0 ? dotIdx + 1 : 0);
+            let targetId: string | null = await this.resolveNodeIdForLocation(graph, targetRelPath, targetRange, false);
+            if (!targetId) {
+              const qualified = `${targetRelPath}#${symbolName}`;
+              targetId = await makeSymbolId('Function', qualified);
+              // Synthesize a Function node when only file-level definition is available
+              graph.addNode({
+                id: targetId,
+                type: 'Function',
+                name: symbolName,
+                filePath: targetRelPath,
+                range: targetRange,
+                createTime: Date.now(),
+                updateTime: Date.now()
+              });
+            }
             if (!targetId || targetId === node.id) continue;
             graph.addEdge({
               type: 'REFERENCES',
@@ -170,7 +185,7 @@ export class DefinitionAndReferencesCrawler {
         start: { line: def.range.start.line, character: def.range.start.character },
         end: { line: def.range.end.line, character: def.range.end.character }
       };
-      const targetId = await this.resolveNodeIdForLocation(graph, targetRelPath, targetRange);
+      const targetId = await this.resolveNodeIdForLocation(graph, targetRelPath, targetRange, false);
       if (!targetId || targetId === node.id) continue;
       graph.addEdge({
         type: 'REFERENCES',
@@ -198,7 +213,7 @@ export class DefinitionAndReferencesCrawler {
         start: { line: ref.range.start.line, character: ref.range.start.character },
         end: { line: ref.range.end.line, character: ref.range.end.character }
       };
-      const sourceId = await this.resolveNodeIdForLocation(graph, sourceRelPath, sourceRange);
+      const sourceId = await this.resolveNodeIdForLocation(graph, sourceRelPath, sourceRange, false);
       if (!sourceId || sourceId === node.id) continue;
       graph.addEdge({
         type: 'REFERENCES',
